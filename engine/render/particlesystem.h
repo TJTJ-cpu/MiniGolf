@@ -2,6 +2,7 @@
 #include <vector>
 #include "resourceid.h"
 #include <GL/glew.h>
+#include <algorithm>
 
 namespace Render
 {
