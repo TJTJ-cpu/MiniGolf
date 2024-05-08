@@ -5,8 +5,10 @@
 PROJECT(golfgame)
 FILE(GLOB project_headers code/*.h)
 FILE(GLOB project_sources code/*.cc)
+FILE(GLOB project_sources2 code/*.cpp)
 
-SET(files_project ${project_headers} ${project_sources})
+
+SET(files_project ${project_headers} ${project_sources} ${project_sources2} )
 SET(files_proto)
 #flat_compile(
 #	test.fbs

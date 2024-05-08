@@ -21,6 +21,7 @@
 #include <chrono>
 #include "spaceship.h"
 #include <iostream>
+#include "playercamera.h"
 
 using namespace Display;
 using namespace Render;
@@ -100,15 +101,16 @@ SpaceGameApp::Run()
     ModelId Open = LoadModel("assets/golf/open.glb");
     ModelId Side = LoadModel("assets/golf/side.glb");
     ModelId Windmill = LoadModel("assets/golf/windmill.glb");
+    ModelId GolfBall = LoadModel("assets/golf/ball-blue.glb");
 
     // load all resources
     ModelId models[6] = {
-        LoadModel("assets/space/Asteroid_1.glb"),
-        LoadModel("assets/space/Asteroid_2.glb"),
-        LoadModel("assets/space/Asteroid_3.glb"),
-        LoadModel("assets/space/Asteroid_4.glb"),
-        LoadModel("assets/space/Asteroid_5.glb"),
-        LoadModel("assets/space/Asteroid_6.glb")
+        LoadModel("assets/golf/ball-blue.glb"),
+        LoadModel("assets/golf/ball-red.glb"),
+        LoadModel("assets/golf/ball-green.glb"),
+        LoadModel("assets/golf/ball-blue.glb"),
+        LoadModel("assets/golf/ball-red.glb"),
+        LoadModel("assets/golf/ball-green.glb")
         //LoadModel("assets/golf/windmill.glb"),
         //LoadModel("assets/golf/windmill.glb"),
         //LoadModel("assets/golf/windmill.glb"),
@@ -141,8 +143,10 @@ SpaceGameApp::Run()
         );
         glm::vec3 rotationAxis = normalize(translation);
         float rotation = translation.x;
-        glm::mat4 transform = glm::rotate(rotation, rotationAxis) * glm::translate(translation);
+        float size = 50;
+        glm::mat4 transform =  glm::rotate(rotation, rotationAxis) * glm::translate(translation) * glm::scale(glm::vec3(size, size, size));
         std::get<1>(asteroid) = Physics::CreateCollider(colliderMeshes[resourceIndex], transform);
+        //transform *= glm::scale(glm::vec3(size, size, size));
         std::get<2>(asteroid) = transform;
         asteroids.push_back(asteroid);
     }
@@ -249,6 +253,7 @@ SpaceGameApp::Run()
     }
 
     SpaceShip ship;
+    PlayerCamera GodEye(glm::vec3(0,5,0), glm::vec3(0,0,0));
     ship.model = LoadModel("assets/space/spaceship.glb");
 
     std::clock_t c_start = std::clock();
@@ -270,8 +275,9 @@ SpaceGameApp::Run()
             ShaderResource::ReloadShaders();
         }
 
-        ship.Update(dt);
-        ship.CheckCollisions();
+        //ship.Update(dt);
+        GodEye.Update(dt);
+        //ship.CheckCollisions();
 
         // Store all drawcalls in the render device
         for (auto const& asteroid : asteroids)
@@ -283,11 +289,8 @@ SpaceGameApp::Run()
             RenderDevice::Draw(std::get<0>(a), std::get<1>(a));
         }
 
-        RenderDevice::Draw(ship.model, ship.transform);
-		glm:: vec3 temp;
-        temp = ship.transform[2];
-		//std::cout << "vec3: " << ship.transform.x << " " << ship.transform.y << " " << ship.transform.z << std::endl;
-
+        //RenderDevice::Draw(ship.model, ship.transform);
+	
         // Execute the entire rendering pipeline
         RenderDevice::Render(this->window, dt);
 
