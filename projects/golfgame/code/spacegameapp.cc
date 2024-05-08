@@ -158,6 +158,7 @@ SpaceGameApp::Run()
         for (int y = 0; y < height; y++)
         {
             glm::vec3 Location(x * offSet, 0, y * offSet);
+            glm::vec3 Rotation(0, 90, 0);   
             glm::mat4 Transform = glm::translate(Location);
             std::tuple<ModelId, glm::mat4> Tile;
             std::cout << "x: " << x << " width: " << width << " y: " << y << " = " << y * width + x << std::endl;
