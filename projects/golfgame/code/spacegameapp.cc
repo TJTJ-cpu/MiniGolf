@@ -148,14 +148,15 @@ SpaceGameApp::Run()
     }
 
     int width = 3;
-    std::string Map = "cScSoSSCSSoScSc";
+    std::string Map = "cScSoSSCSSoSSoScHc";
     // THIS SHIT IS BOTTOM UP
     // FROM THE SPACESHIP'S SPAWN PERSPECTIVE X INCREASES LEFT AND Y UP
     std::vector<int> Rotations = {  2,1,1,
                                     2,0,0,
                                     2,0,0,
                                     2,0,0,
-                                    3,3,0 };
+                                    2,0,0,
+                                    3,2,0 };
     int height;
     height = Map.length() / width;
     std::vector<std::tuple<ModelId, glm::mat4>> PlatformTiles;
@@ -165,8 +166,7 @@ SpaceGameApp::Run()
         for (int y = 0; y < height; y++)
         {
             glm::vec3 Location(x * offSet, 0, y * offSet);
-
-            glm::mat4 Transform =  glm::translate(Location) * glm::rotate(Rotations[y * width + x] * 3.14f/2, glm::vec3(0,1,0));
+            glm::mat4 Transform =  glm::translate(Location) * glm::rotate(Rotations[y * width + x] * 3.141592653f/2, glm::vec3(0,1,0));
 
             std::tuple<ModelId, glm::mat4> Tile;
             std::cout << "x: " << x << " width: " << width << " y: " << y << " = " << y * width + x << std::endl;
@@ -179,13 +179,19 @@ SpaceGameApp::Run()
             else if (Map[y * width + x] == 's')
                 std::get<0>(Tile) = Windmill;
             else if (Map[y * width + x] == 'H')
-                std::get<0>(Tile) = Flag;
+                std::get<0>(Tile) = HoleOpen;
             else if (Map[y * width + x] == 'o')
                 std::get<0>(Tile) = Open;
             else
                 std::cout << "somthing went wrong here" << std::endl;
             std::get<1>(Tile) = Transform;
             PlatformTiles.push_back(Tile);
+            if (Map[y * width + x] == 'H')
+            {
+                std::get<0>(Tile) = Flag;
+				std::get<1>(Tile) = Transform;
+				PlatformTiles.push_back(Tile);
+            }
         }
     }
 
