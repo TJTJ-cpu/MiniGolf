@@ -3,6 +3,7 @@
 // (C) 2022 Individual contributors, see AUTHORS file
 //------------------------------------------------------------------------------
 #include "config.h"
+#include "golfball.h"
 #include "spacegameapp.h"
 #include <cstring>
 #include "imgui.h"
@@ -101,7 +102,7 @@ SpaceGameApp::Run()
     ModelId Open = LoadModel("assets/golf/open.glb");
     ModelId Side = LoadModel("assets/golf/side.glb");
     ModelId Windmill = LoadModel("assets/golf/windmill.glb");
-    ModelId GolfBall = LoadModel("assets/golf/ball-blue.glb");
+    ModelId BlueGolfBall = LoadModel("assets/golf/ball-blue.glb");
 
     // load all resources
     ModelId models[6] = {
@@ -145,7 +146,7 @@ SpaceGameApp::Run()
         float rotation = translation.x;
         float size = 50;
         glm::mat4 transform =  glm::rotate(rotation, rotationAxis) * glm::translate(translation) * glm::scale(glm::vec3(size, size, size));
-        std::get<1>(asteroid) = Physics::CreateCollider(colliderMeshes[resourceIndex], transform);
+        //std::get<1>(asteroid) = Physics::CreateCollider(colliderMeshes[resourceIndex], transform);
         //transform *= glm::scale(glm::vec3(size, size, size));
         std::get<2>(asteroid) = transform;
         asteroids.push_back(asteroid);
@@ -253,8 +254,9 @@ SpaceGameApp::Run()
     }
 
     SpaceShip ship;
-    PlayerCamera GodEye(glm::vec3(0,5,0), glm::vec3(0,0,0));
+    PlayerCamera GodEye(glm::vec3(1,1,1), glm::vec3(0,2,0), glm::vec3(0,0,0));
     ship.model = LoadModel("assets/space/spaceship.glb");
+
 
     std::clock_t c_start = std::clock();
     double dt = 0.01667f;
@@ -288,6 +290,7 @@ SpaceGameApp::Run()
         {
             RenderDevice::Draw(std::get<0>(a), std::get<1>(a));
         }
+        GodEye.Ball.Draw();
 
         //RenderDevice::Draw(ship.model, ship.transform);
 	
