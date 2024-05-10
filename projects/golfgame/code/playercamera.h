@@ -29,7 +29,7 @@ public:
 
 	GolfBall Ball;
 
-	float MovementSpeed = 3.5f;
+	float MovementSpeed = 10.0f;
 	float VerticleSpeed = 2.0f;
 	//func
 	
@@ -70,6 +70,7 @@ public:
 		{
 			//Position = Ball.Position + OffSet;
 			// SMOOTHLY MOVE THE CAMERA BACK TO THE BALL
+			Position = mix(Position, Ball.Position + OffSet, std::min(0.1f, DeltaSeconds * 30.0f));
 		}
 		else
 		{
