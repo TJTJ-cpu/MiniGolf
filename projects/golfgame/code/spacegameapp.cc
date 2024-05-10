@@ -254,7 +254,7 @@ SpaceGameApp::Run()
     }
 
     SpaceShip ship;
-    PlayerCamera GodEye(glm::vec3(1,1,1), glm::vec3(0,2,0), glm::vec3(0,0,0));
+    PlayerCamera GodEye(glm::vec3(1,0.1,1), glm::vec3(0,2,0), glm::vec3(0,0,0));
     ship.model = LoadModel("assets/space/spaceship.glb");
 
 
@@ -290,7 +290,7 @@ SpaceGameApp::Run()
         {
             RenderDevice::Draw(std::get<0>(a), std::get<1>(a));
         }
-        GodEye.Ball.Draw();
+        GodEye.Draw();
 
         //RenderDevice::Draw(ship.model, ship.transform);
 	
