@@ -104,6 +104,16 @@ SpaceGameApp::Run()
     ModelId Windmill = LoadModel("assets/golf/windmill.glb");
     ModelId BlueGolfBall = LoadModel("assets/golf/ball-blue.glb");
 
+    Physics::ColliderMeshId mFlag = Physics::LoadColliderMesh("assets/golf/flag-red.glb");
+    Physics::ColliderMeshId mHoleOpen = Physics::LoadColliderMesh("assets/golf/hole-open.glb");
+    Physics::ColliderMeshId mCorner = Physics::LoadColliderMesh("assets/golf/corner.glb");
+    Physics::ColliderMeshId mStart = Physics::LoadColliderMesh("assets/golf/start.glb");
+    Physics::ColliderMeshId mCastle = Physics::LoadColliderMesh("assets/golf/castle.glb");
+    Physics::ColliderMeshId mOpen = Physics::LoadColliderMesh("assets/golf/open.glb");
+    Physics::ColliderMeshId mSide = Physics::LoadColliderMesh("assets/golf/side.glb");
+    Physics::ColliderMeshId mWindmill = Physics::LoadColliderMesh("assets/golf/windmill.glb");
+    Physics::ColliderMeshId mBlueGolfBall = Physics::LoadColliderMesh("assets/golf/ball-blue.glb");
+
     // load all resources
     ModelId models[6] = {
         LoadModel("assets/golf/ball-blue.glb"),
@@ -118,6 +128,14 @@ SpaceGameApp::Run()
         //LoadModel("assets/golf/windmill.glb"),
         //LoadModel("assets/golf/windmill.glb"),
         //LoadModel("assets/golf/windmill.glb")
+    };
+    Physics::ColliderMeshId tileMeshCollisder[6] = {
+        LoadModel("assets/golf/ball-blue.glb"),
+        LoadModel("assets/golf/ball-red.glb"),
+        LoadModel("assets/golf/ball-green.glb"),
+        LoadModel("assets/golf/ball-blue.glb"),
+        LoadModel("assets/golf/ball-red.glb"),
+        LoadModel("assets/golf/ball-green.glb")
     };
     Physics::ColliderMeshId colliderMeshes[6] = {
         Physics::LoadColliderMesh("assets/space/Asteroid_1_physics.glb"),
@@ -164,7 +182,7 @@ SpaceGameApp::Run()
                                     3,2,0 };
     int height;
     height = Map.length() / width;
-    std::vector<std::tuple<ModelId, glm::mat4>> PlatformTiles;
+    std::vector<std::tuple<ModelId, glm::mat4, Physics::ColliderId>> PlatformTiles;
     int offSet = 1;
     for (int x = 0; x < width; x++) 
     {
@@ -173,20 +191,32 @@ SpaceGameApp::Run()
             glm::vec3 Location(x * offSet, 0, y * offSet);
             glm::mat4 Transform =  glm::translate(Location) * glm::rotate(Rotations[y * width + x] * 3.141592653f/2, glm::vec3(0,1,0));
 
-            std::tuple<ModelId, glm::mat4> Tile;
+            std::tuple<ModelId, glm::mat4, Physics::ColliderId> Tile;
             std::cout << "x: " << x << " width: " << width << " y: " << y << " = " << y * width + x << std::endl;
-            if (Map[y * width + x] == 'c')
+            if (Map[y * width + x] == 'c') {
                 std::get<0>(Tile) = Corner;
-            else if (Map[y * width + x] == 'C')
+				std::get<2>(Tile) = Physics::CreateCollider(mCorner, Transform);
+            }
+            else if (Map[y * width + x] == 'C') {
                 std::get<0>(Tile) = Castle;
-            else if (Map[y * width + x] == 'S')
+                std::get<2>(Tile) = Physics::CreateCollider(mCastle, Transform);
+            }
+            else if (Map[y * width + x] == 'S') {
                 std::get<0>(Tile) = Side;
-            else if (Map[y * width + x] == 's')
+                std::get<2>(Tile) = Physics::CreateCollider(mSide, Transform);
+            }
+            else if (Map[y * width + x] == 's') {
                 std::get<0>(Tile) = Windmill;
-            else if (Map[y * width + x] == 'H')
+                std::get<2>(Tile) = Physics::CreateCollider(mWindmill, Transform);
+            }
+            else if (Map[y * width + x] == 'H') {
                 std::get<0>(Tile) = HoleOpen;
-            else if (Map[y * width + x] == 'o')
+                std::get<2>(Tile) = Physics::CreateCollider(mHoleOpen, Transform);
+            }
+            else if (Map[y * width + x] == 'o') {
                 std::get<0>(Tile) = Open;
+                std::get<2>(Tile) = Physics::CreateCollider(mOpen, Transform);
+            }
             else
                 std::cout << "somthing went wrong here" << std::endl;
             std::get<1>(Tile) = Transform;
@@ -254,9 +284,8 @@ SpaceGameApp::Run()
     }
 
     SpaceShip ship;
-    PlayerCamera GodEye(glm::vec3(1,0.1,1), glm::vec3(0,2,0), glm::vec3(0,0,0));
     ship.model = LoadModel("assets/space/spaceship.glb");
-
+    PlayerCamera GodEye(glm::vec3(1,0.1,1), glm::vec3(0,2,0), glm::vec3(0,0,0));
 
     std::clock_t c_start = std::clock();
     double dt = 0.01667f;
@@ -279,6 +308,7 @@ SpaceGameApp::Run()
 
         //ship.Update(dt);
         GodEye.Update(dt);
+        GodEye.CheckCollisions();
         //ship.CheckCollisions();
 
         // Store all drawcalls in the render device

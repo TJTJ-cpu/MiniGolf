@@ -1,4 +1,6 @@
 #include "golfball.h"
+#include "render/physics.h"
+#include <iostream>
 
 
 GolfBall::GolfBall() 
@@ -24,11 +26,18 @@ void GolfBall::Draw()
 
 void GolfBall::Update(float dt)
 {
-	Position += glm::vec3(dt, 0, 0);
+	Velocity *= FrictionForce;
+	this->Position += Velocity;
+	if (!CheckCollisions()) {
+		//this->Position.y -= dt * Gravity;
+	}
 	Transform = glm::translate(Position);
 }
 
-void GolfBall::CheckCollisions()
+bool GolfBall::CheckCollisions()
 {
-
+	Physics::RaycastPayload HitResult;
+	HitResult = Physics::Raycast(this->Position, glm::vec3(0, -1, 0), 0.07);
+	std::cout << "Hit: " << HitResult.hit << std::endl;
+	return HitResult.hit;
 }

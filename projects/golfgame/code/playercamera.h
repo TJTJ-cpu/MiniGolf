@@ -34,7 +34,8 @@ public:
 	
 	void Update(float DeltaSeconds)
 	{
-		//Ball.Update(DeltaSeconds);
+		Ball.Update(DeltaSeconds);
+		this->Club.Position.y = this->Ball.Position.y + 0.7f;
 		Render::Camera* cam = Render::CameraManager::GetCamera(CAMERA_MAIN);
 		Input::Keyboard* kbd = Input::GetDefaultKeyboard();
 
@@ -60,9 +61,6 @@ public:
 		int count;
 		const float* axes = glfwGetJoystickAxes(GLFW_JOYSTICK_1, &count);
 		const unsigned char* Hit = glfwGetJoystickButtons(GLFW_JOYSTICK_1, &count);
-		if (Hit[0] == GLFW_PRESS && !Club.bIsMovingTowardBall) {
-			Club.bIsMovingTowardBall = true;
-		}
 
 
 		/// DECLARE THIS SOMEWHERE ELSE LATER
@@ -70,6 +68,13 @@ public:
 		glm::vec3 ClubPos = Club.Position;
 		BallPos.y = 0;
 		ClubPos.y = 0;
+
+		/// IF THE ACTION BUTTON IS PRESSED GO TOWARDS TO BALL
+		if (Hit[0] == GLFW_PRESS && !Club.bIsMovingTowardBall && (glm::length(Ball.Velocity) < 0.1)) {
+			Club.bIsMovingTowardBall = true;
+			BallHitDirection = glm::normalize(BallPos - ClubPos);
+		}
+		//std::cout << Club.bIsMovingTowardBall << std::endl;
 		if (!Club.bIsMovingTowardBall)
 		{
 			float Distance = glm::distance(BallPos, ClubPos);
@@ -79,31 +84,29 @@ public:
 			Club.Position.z += DeltaSeconds * axes[0] * VerticleSpeed;
 			float MaxDistance = 2;
 			if (Distance > MaxDistance) {
+			std::cout << Distance << "      " << std::endl;
 				glm::vec3 norm = glm::normalize((ClubPos - BallPos));
-				norm *= MaxDistance;
+				norm *= MaxDistance - 0.01;
 				Club.Position = Ball.Position + norm;
 				Club.Position.y += 0.7f;
 			}
+			/// ROTATE THE CLUB TO POINT AT THE BALL
 			Club.Rotation = glm::inverse(glm::lookAt(ClubPos, BallPos, glm::vec3(0, 1, 0))) * glm::rotate(3.141592f / 2, glm::vec3(0,1,0));
 		}
 		else {
-			// normalize
 			glm::vec3 norm = glm::normalize(BallPos - ClubPos);
-			BallHitDirection = norm;
-			// go toward until ball -- while
+			//BallHitDirection = norm;
 			if (glm::distance(ClubPos, BallPos) > 0.1f){
+				// Club moving toward the ball
 				Club.Position += norm * ClubMovementSpeed * DeltaSeconds;
 				ClubPos = Club.Position;
 				ClubPos.y = 0;
 			}
 			else {
+				Ball.Velocity = BallHitDirection * 0.5f;
 				Club.bIsMovingTowardBall = false;
 			}
 		}
-		
-		/// ROTATE THE CLUB TO POINT AT THE BALL
-
-		/// IF THE ACTION BUTTON IS PRESSED GO TOWARDS TO BALL
 
 		Club.Transform = glm::translate(Club.Position) * (glm::mat4)Club.Rotation;
 		//OffSet.y += DeltaSeconds * -axes[1] * VerticleSpeed;
@@ -136,6 +139,7 @@ public:
 
 	void CheckCollisions()
 	{
+
 		/// CHECK IF BALL IS COLLIDING WITH WALL OR FLOOR
 
 		/// CHECK IF CLUB IS COLLIDING WITH WALL
