@@ -27,3 +27,8 @@ void GolfBall::Update(float dt)
 	Position += glm::vec3(dt, 0, 0);
 	Transform = glm::translate(Position);
 }
+
+void GolfBall::CheckCollisions()
+{
+
+}

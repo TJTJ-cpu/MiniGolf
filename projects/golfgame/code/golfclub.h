@@ -20,4 +20,5 @@ public:
 	float MaxDistance;
 
 	void Draw();
+	void CheckCollisions();
 };

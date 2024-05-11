@@ -15,4 +15,5 @@ public:
 
 	void Draw();
 	void Update(float dt);
+	void CheckCollisions();
 };

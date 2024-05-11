@@ -19,3 +19,7 @@ void GolfClub::Draw()
 {
 	Render::RenderDevice::Draw(Model, Transform);
 }
+
+void GolfClub::CheckCollisions()
+{
+}

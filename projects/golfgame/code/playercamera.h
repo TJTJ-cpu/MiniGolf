@@ -134,4 +134,11 @@ public:
 		this->Ball.Draw();
 	}
 
+	void CheckCollisions()
+	{
+		/// CHECK IF BALL IS COLLIDING WITH WALL OR FLOOR
+
+		/// CHECK IF CLUB IS COLLIDING WITH WALL
+
+	}
 };

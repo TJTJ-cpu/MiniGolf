@@ -261,7 +261,7 @@ SpaceGameApp::Run()
     std::clock_t c_start = std::clock();
     double dt = 0.01667f;
 
-    // game loop
+    /// game loop
     while (this->window->IsOpen())
 	{
         auto timeStart = std::chrono::steady_clock::now();
