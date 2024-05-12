@@ -14,7 +14,7 @@ public:
 		OffSet = offset;
 		Position = OffSet;
 		Ball = GolfBall(pos, "assets/golf/ball-blue.glb");
-		Club = GolfClub(pos + glm::vec3(1,0.7,0), "assets/golf/club-blue.glb", 4);
+		Club = GolfClub(pos + glm::vec3(0,0.7,-1), "assets/golf/club-blue.glb", 4);
 	}
 
 	glm::mat4 Transform;
@@ -31,6 +31,7 @@ public:
 	float MovementSpeed = 10.0f;
 	float ClubMovementSpeed = 4.2f;
 	float VerticleSpeed = 2.0f;
+	float DistanceFromClubToTheGolfBall;
 	
 	void Update(float DeltaSeconds)
 	{
@@ -72,6 +73,7 @@ public:
 		/// IF THE ACTION BUTTON IS PRESSED GO TOWARDS TO BALL
 		if (Hit[0] == GLFW_PRESS && !Club.bIsMovingTowardBall && (glm::length(Ball.Velocity) < 0.1)) {
 			Club.bIsMovingTowardBall = true;
+			DistanceFromClubToTheGolfBall = glm::distance(this->Ball.Position, this->Club.Position);
 			BallHitDirection = glm::normalize(BallPos - ClubPos);
 		}
 		//std::cout << Club.bIsMovingTowardBall << std::endl;
@@ -103,7 +105,7 @@ public:
 				ClubPos.y = 0;
 			}
 			else {
-				Ball.Velocity = BallHitDirection * 0.5f;
+				this->Ball.AddForce(BallHitDirection * 50.3f * DistanceFromClubToTheGolfBall);
 				Club.bIsMovingTowardBall = false;
 			}
 		}
@@ -128,12 +130,17 @@ public:
 				Position = Ball.Position + OffSet + norm;
 			}
 		}
+		this->Ball.HandlePhysics(DeltaSeconds);
 		cam->view = glm::lookAt(Position, Position + glm::vec3(0,-1,0), glm::vec3(1,0,0));
 	}
 	
 	void Draw()
 	{
-		this->Club.Draw();
+		if (glm::length(this->Ball.Velocity) < 0.05) {
+			this->Club.Draw();
+		}
+		else
+			this->Club.Position = this->Ball.Position + glm::vec3(0, 0, -1); 
 		this->Ball.Draw();
 	}
 

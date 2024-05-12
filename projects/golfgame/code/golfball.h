@@ -20,5 +20,8 @@ public:
 
 	void Draw();
 	void Update(float dt);
-	bool CheckCollisions();
+	bool IsGrounded();
+	bool IsWallHit();
+	void HandlePhysics(float dt);
+	void AddForce(glm::vec3 force);
 };
