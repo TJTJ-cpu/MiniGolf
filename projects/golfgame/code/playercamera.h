@@ -28,7 +28,7 @@ public:
 	/// TEMP VAR 
 	glm::vec3 BallHitDirection;
 
-	float MovementSpeed = 10.0f;
+	float MovementSpeed = 5.0f;
 	float ClubMovementSpeed = 4.2f;
 	float VerticleSpeed = 2.0f;
 	float DistanceFromClubToTheGolfBall;
@@ -76,7 +76,6 @@ public:
 			DistanceFromClubToTheGolfBall = glm::distance(this->Ball.Position, this->Club.Position);
 			BallHitDirection = glm::normalize(BallPos - ClubPos);
 		}
-		//std::cout << Club.bIsMovingTowardBall << std::endl;
 		if (!Club.bIsMovingTowardBall)
 		{
 			float Distance = glm::distance(BallPos, ClubPos);
@@ -86,7 +85,6 @@ public:
 			Club.Position.z += DeltaSeconds * axes[0] * VerticleSpeed;
 			float MaxDistance = 2;
 			if (Distance > MaxDistance) {
-			std::cout << Distance << "      " << std::endl;
 				glm::vec3 norm = glm::normalize((ClubPos - BallPos));
 				norm *= MaxDistance - 0.01;
 				Club.Position = Ball.Position + norm;
@@ -105,7 +103,7 @@ public:
 				ClubPos.y = 0;
 			}
 			else {
-				this->Ball.AddForce(BallHitDirection * 100.3f * DistanceFromClubToTheGolfBall);
+				this->Ball.AddForce(BallHitDirection * 75.3f * DistanceFromClubToTheGolfBall);
 				Club.bIsMovingTowardBall = false;
 			}
 		}
@@ -126,12 +124,11 @@ public:
 				glm::vec3 norm = glm::normalize((Position - (Ball.Position + OffSet)));
 				norm.y = 0;
 				norm *= CameraMoveableRadius;
-				std::cout << "X: " << norm.x << " Y: " << norm.y << " Z: " << norm.z << std::endl;
 				Position = Ball.Position + OffSet + norm;
 			}
 		}
 		this->Ball.HandlePhysics(DeltaSeconds);
-		cam->view = glm::lookAt(Position, Position + glm::vec3(0,-1,0), glm::vec3(1,0,0));
+		cam->view = glm::lookAt(Position, Position + glm::vec3(1,-1,0), glm::vec3(1,0,0));
 	}
 	
 	void Draw()
@@ -139,8 +136,10 @@ public:
 		if (glm::length(this->Ball.Velocity) < 0.05) {
 			this->Club.Draw();
 		}
-		else
+		else {
+			Debug::DrawDebugText("HsjflksdajflkasdjflksadjlkfsjlkdfasjfksadjfsadjkfsIT", Ball.Position , glm::vec4(0, 0, 0, 1));
 			this->Club.Position = this->Ball.Position + glm::vec3(0, 0, -1); 
+		}
 		this->Ball.Draw();
 	}
 

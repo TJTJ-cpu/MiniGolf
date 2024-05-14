@@ -95,11 +95,11 @@ public:
 					std::cout << "ERROR::TileManager::VoidSpawnMap" << std::endl;
 				temp.Transform = Transform;
 				PlatformTiles.push_back(temp);
-				if (Map[y * width + x] == 'H') {
-					temp.Model = Flag;
-					temp.Transform = Transform;
-					PlatformTiles.push_back(temp);
-				}
+				//if (Map[y * width + x] == 'H') {
+				//	temp.Model = Flag;
+				//	temp.Transform = Transform;
+				//	PlatformTiles.push_back(temp);
+				//}
 			}
 		}
 	}

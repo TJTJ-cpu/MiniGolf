@@ -20,6 +20,16 @@ void GolfClub::Draw()
 	Render::RenderDevice::Draw(Model, Transform);
 }
 
+void GolfClub::AddForce(glm::vec3 Force) {
+	Acceleration += Force;
+}
+
+void GolfClub::HandlePhysics(float dt) {
+	Velocity += Acceleration * dt;
+	Position += Velocity * dt;
+	Acceleration = glm::vec3(0,0,0);
+}
+
 void GolfClub::CheckCollisions()
 {
 }

@@ -8,6 +8,7 @@ public:
 	GolfBall();
 	GolfBall(glm::vec3 Pos, const char* md);
 	glm::vec3 Position = glm::vec3(0,0,0);
+	glm::vec3 PrevPosition = glm::vec3(0,0,0);
 	glm::vec3 Velocity = glm::vec3(0,0,0);
 	/// TO DO 
 	glm::vec3 Acceleration = glm::vec3(0,0,0);

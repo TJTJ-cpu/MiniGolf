@@ -96,7 +96,7 @@ SpaceGameApp::Run()
 
     //ModelId Square = LoadModel("asset/golf/square-corner-a.glb");
 
-	int width = 3;
+	int Three = 3;
 	std::string Map = "cScSoSSoSSoSSoSSHScSc";
     int Four = 4;
     std::string Map1 = "ctc t ccC  tt ccSSS SCc cS   h  ";
@@ -119,7 +119,7 @@ SpaceGameApp::Run()
 									2,0,0,
 									3,3,0 };
     TileManager Tile;
-    Tile.SpawnMap(Four, Map1, Map1Rotations);
+    Tile.SpawnMap(Three, Map, Rotations);
 
 	struct ColliderId {
 		std::vector<Physics::ColliderMeshId> CollisionShapes;
@@ -232,7 +232,7 @@ SpaceGameApp::Run()
 
     SpaceShip ship;
     ship.model = LoadModel("assets/space/spaceship.glb");
-    PlayerCamera GodEye(glm::vec3((0.95 * 2), 0.1, 0.05), glm::vec3(0, 2, 0), glm::vec3(0, 0, 0));
+    PlayerCamera GodEye(glm::vec3((0.95 * 2), 1.1, 0.05), glm::vec3(-1, 1, 0), glm::vec3(0, 0, 0));
 
     std::clock_t c_start = std::clock();
     double dt = 0.01667f;
@@ -263,11 +263,11 @@ SpaceGameApp::Run()
             RenderDevice::Draw(std::get<0>(asteroid), std::get<2>(asteroid));
         }
         for (auto const& a : Tile.PlatformTiles) {
-            //RenderDevice::Draw(a.Model, a.Transform);
+            RenderDevice::Draw(a.Model, a.Transform);
         }
         GodEye.Draw();
 
-        Physics::DebugDrawColliders();
+        //Physics::DebugDrawColliders();
 
         //RenderDevice::Draw(ship.model, ship.transform);
 	
