@@ -23,6 +23,7 @@
 #include "spaceship.h"
 #include <iostream>
 #include "playercamera.h"
+#include "tilemanager.h"
 
 using namespace Display;
 using namespace Render;
@@ -94,21 +95,31 @@ SpaceGameApp::Run()
     cam->projection = projection;
 
     //ModelId Square = LoadModel("asset/golf/square-corner-a.glb");
-    ModelId Flag = LoadModel("assets/golf/flag-red.glb");
-    ModelId HoleOpen = LoadModel("assets/golf/hole-open.glb");
-    ModelId Corner = LoadModel("assets/golf/corner.glb");
-    ModelId Start = LoadModel("assets/golf/start.glb");
-    ModelId Castle = LoadModel("assets/golf/castle.glb");
-    ModelId Open = LoadModel("assets/golf/open.glb");
-    ModelId Side = LoadModel("assets/golf/side.glb");
-    ModelId Windmill = LoadModel("assets/golf/windmill.glb");
-    ModelId BlueGolfBall = LoadModel("assets/golf/ball-blue.glb");
 
-    Physics::ColliderMeshId mHoleOpen = Physics::LoadColliderMesh("assets/golf/hole-open.glb");
-    Physics::ColliderMeshId mStart = Physics::LoadColliderMesh("assets/golf/start.glb");
-    Physics::ColliderMeshId mOpen = Physics::LoadColliderMesh("assets/golf/open.glb");
-    Physics::ColliderMeshId mBlueGolfBall = Physics::LoadColliderMesh("assets/golf/ball-blue.glb");
-    Physics::ColliderMeshId mWall = Physics::LoadColliderMesh("assets/golf/wallPhysicCollision.glb");
+	int width = 3;
+	std::string Map = "cScSoSSoSSoSSoSSHScSc";
+    int Four = 4;
+    std::string Map1 = "ctc t ccC  tt ccSSS SCc cS   h  ";
+    // THIS SHIT IS BOTTOM UP
+	// FROM THE SPACESHIP'S SPAWN PERSPECTIVE X INCREASES LEFT AND Y UP
+    std::vector<int> Map1Rotations = { 2,1,1,0,
+                                    0,0,3,1,
+                                    0,0,0,0,
+                                    0,0,2,0,
+                                    2,1,0,0,
+                                    2,2,0,0,
+                                    3,0,0,0,
+                                    0,0,0,0,
+    };
+	std::vector<int> Rotations = { 2,1,1,
+									2,0,0,
+									2,0,0,
+									2,0,0,
+									2,0,0,
+									2,0,0,
+									3,3,0 };
+    TileManager Tile;
+    Tile.SpawnMap(Four, Map1, Map1Rotations);
 
 	struct ColliderId {
 		std::vector<Physics::ColliderMeshId> CollisionShapes;
@@ -165,72 +176,6 @@ SpaceGameApp::Run()
         asteroids.push_back(asteroid);
     }
 
-    int width = 3;
-    std::string Map = "cScSoSSoSSoSSoSSHScSc";
-    // THIS SHIT IS BOTTOM UP
-    // FROM THE SPACESHIP'S SPAWN PERSPECTIVE X INCREASES LEFT AND Y UP
-    std::vector<int> Rotations = {  2,1,1,
-                                    2,0,0,
-                                    2,0,0,
-                                    2,0,0,
-                                    2,0,0,
-                                    2,0,0,
-                                    3,3,0 };
-    int height;
-    height = Map.length() / width;
-    std::vector<std::tuple<ModelId, glm::mat4, Physics::ColliderId>> PlatformTiles;
-    float offSet = 0.95;
-    for (int x = 0; x < width; x++) 
-    {
-        for (int y = 0; y < height; y++)
-        {
-            glm::vec3 Location(x * offSet, 0, y * offSet);
-            glm::mat4 Transform =  glm::translate(Location) * glm::rotate(Rotations[y * width + x] * 3.141592653f/2, glm::vec3(0,1,0));
-
-            std::tuple<ModelId, glm::mat4, Physics::ColliderId> Tile;
-            std::cout << "x: " << x << " width: " << width << " y: " << y << " = " << y * width + x << std::endl;
-            if (Map[y * width + x] == 'c') {
-                std::get<0>(Tile) = Corner;
-				std::get<2>(Tile) = Physics::CreateCollider(mOpen, Transform);
-				std::get<2>(Tile) = Physics::CreateCollider(mWall, Transform * glm::rotate(-3.141592653f / 2 , glm::vec3(0,1,0)));
-				std::get<2>(Tile) = Physics::CreateCollider(mWall, Transform );
-				//std::get<2>(Tile) = Physics::CreateCollider(mWall, Transform * glm::rotate(-3.141592653f , glm::vec3(0,1,0)));
-            }
-            else if (Map[y * width + x] == 'C') {
-                std::get<0>(Tile) = Castle;
-                std::get<2>(Tile) = Physics::CreateCollider(mOpen, Transform);
-            }
-            else if (Map[y * width + x] == 'S') {
-                std::get<0>(Tile) = Side;
-                std::get<2>(Tile) = Physics::CreateCollider(mOpen, Transform);
-                std::get<2>(Tile) = Physics::CreateCollider(mWall, Transform * glm::translate(glm::vec3(0, 0, 0.1)));
-                std::get<2>(Tile) = Physics::CreateCollider(mWall, Transform * glm::translate(glm::vec3(0, 0, -0.1)));
-				std::get<2>(Tile) = Physics::CreateCollider(mWall, Transform);
-            }
-            else if (Map[y * width + x] == 's') {
-                std::get<0>(Tile) = Windmill;
-                std::get<2>(Tile) = Physics::CreateCollider(mOpen, Transform);
-            }
-            else if (Map[y * width + x] == 'H') {
-                std::get<0>(Tile) = HoleOpen;
-                std::get<2>(Tile) = Physics::CreateCollider(mHoleOpen, Transform);
-            }
-            else if (Map[y * width + x] == 'o') {
-                std::get<0>(Tile) = Open;
-                std::get<2>(Tile) = Physics::CreateCollider(mOpen, Transform);
-            }
-            else
-                std::cout << "somthing went wrong here" << std::endl;
-            std::get<1>(Tile) = Transform;
-            PlatformTiles.push_back(Tile);
-            if (Map[y * width + x] == 'H')
-            {
-                std::get<0>(Tile) = Flag;
-				std::get<1>(Tile) = Transform;
-				PlatformTiles.push_back(Tile);
-            }
-        }
-    }
 
     // Setup asteroids far
     for (int i = 0; i < 20; i++)
@@ -287,7 +232,7 @@ SpaceGameApp::Run()
 
     SpaceShip ship;
     ship.model = LoadModel("assets/space/spaceship.glb");
-    PlayerCamera GodEye(glm::vec3(1,0.1,1), glm::vec3(0,2,0), glm::vec3(0,0,0));
+    PlayerCamera GodEye(glm::vec3((0.95 * 2), 0.1, 0.05), glm::vec3(0, 2, 0), glm::vec3(0, 0, 0));
 
     std::clock_t c_start = std::clock();
     double dt = 0.01667f;
@@ -314,15 +259,15 @@ SpaceGameApp::Run()
         //ship.CheckCollisions();
 
         // Store all drawcalls in the render device
-        for (auto const& asteroid : asteroids)
-        {
+        for (auto const& asteroid : asteroids) {
             RenderDevice::Draw(std::get<0>(asteroid), std::get<2>(asteroid));
         }
-        for (auto const& a : PlatformTiles)
-        {
-            RenderDevice::Draw(std::get<0>(a), std::get<1>(a));
+        for (auto const& a : Tile.PlatformTiles) {
+            //RenderDevice::Draw(a.Model, a.Transform);
         }
         GodEye.Draw();
+
+        Physics::DebugDrawColliders();
 
         //RenderDevice::Draw(ship.model, ship.transform);
 	

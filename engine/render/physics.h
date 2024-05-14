@@ -84,6 +84,7 @@ struct RaycastPayload
     bool hit = false;
     float hitDistance = 0;
     glm::vec3 hitPoint;
+    glm::vec3 hitNormal;
     ColliderId collider;
 };
 
@@ -98,5 +99,7 @@ void SetTransform(ColliderId collider, glm::mat4 const& transform);
 // temp
 void SetupBVH();
 void VisualizeBVH();
+
+void DebugDrawColliders();
 
 } // namespace Physics

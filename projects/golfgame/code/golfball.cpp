@@ -2,7 +2,8 @@
 #include "render/physics.h"
 #include <iostream>
 #include "render/debugrender.h"
-
+#include "render/input/inputserver.h"
+#include "render/input/keyboard.h"
 GolfBall::GolfBall() 
 {
 	Position = glm::vec3(1, 1, 1);
@@ -42,7 +43,7 @@ void GolfBall::Update(float dt)
 bool GolfBall::IsGrounded()
 {
 	Physics::RaycastPayload HitResult;
-	float BallRadius = 0.10;
+	float BallRadius = 0.05;
 
 	bool bGrounded = false;
 
@@ -69,27 +70,31 @@ bool GolfBall::IsWallHit()
 
 	std::vector<glm::vec3> WallDirections;
 
-	float BallRadius = 0.07;
+	float BallRadius = 0.05;
 	bool bIsWalled = false;
-	
+
 	/// Create rays in all directions
 	for (float i = 0; i < 2 * 3.141592f; i += (2 * 3.141592f) / 120)
 		WallDirections.push_back(glm::vec3(glm::cos(i), 0, glm::sin(i)));
 	
-	for (glm::vec3 &Direction : WallDirections) {
-		HitResult = Physics::Raycast(this->Position, Direction, BallRadius);
-		Physics::RaycastPayload TESTDELETETHIS = Physics::Raycast(this->Position, Direction, 5);
+	glm::vec3 rayOrigin = this->Position + glm::vec3(0.0f,-0.01f,0.0f);
+
+	for (int i = 0; i < WallDirections.size(); i++) {
+		glm::vec3 &Direction = WallDirections[i];
+
+		HitResult = Physics::Raycast(rayOrigin, Direction, BallRadius);
+ 		Physics::RaycastPayload TESTDELETETHIS = Physics::Raycast(rayOrigin, Direction, 5);
 		if (TESTDELETETHIS.hit)
-			Debug::DrawLine(this->Position, TESTDELETETHIS.hitPoint, 1.0f, glm::vec4(0, 1, 0, 1), glm::vec4(0, 1, 0, 1), Debug::RenderMode::AlwaysOnTop);
+			Debug::DrawLine(rayOrigin, TESTDELETETHIS.hitPoint, 2.0f, glm::vec4(0, 1, 0, 1), glm::vec4(0, 1, 0, 1), Debug::RenderMode::Normal);
 		else
-			Debug::DrawLine(this->Position, this->Position + Direction * 5.0f, 1.0f, glm::vec4(0, 1, 0, 1), glm::vec4(0, 1, 0, 1), Debug::RenderMode::AlwaysOnTop);
+			Debug::DrawLine(rayOrigin, rayOrigin + Direction * 5.0f, 2.0f, glm::vec4(1, 0, 0, 1), glm::vec4(1, 0, 0, 1), Debug::RenderMode::Normal);
 		if (HitResult.hit) {
 			glm::vec3 Dir = Direction + glm::vec3(0.001, 0, 0.001);
-			HitResultExtendedCheck = Physics::Raycast(this->Position, Dir, 1);
+			HitResultExtendedCheck = Physics::Raycast(rayOrigin, Dir, 1);
 			if (HitResultExtendedCheck.hit && !bIsWalled) {
 				glm::vec3 tangent = HitResult.hitPoint - HitResultExtendedCheck.hitPoint;
 				glm::vec3 normal = glm::normalize(glm::cross(tangent, glm::vec3(0, 1, 0)));
-				if (glm::dot((this->Position - HitResult.hitPoint), normal) < 0) {
+				if (glm::dot((rayOrigin - HitResult.hitPoint), normal) < 0) {
 					normal *= -1;
 				}
 				std::cout << normal.x << ", " << normal.y << ", " << normal.z << std::endl;
@@ -105,8 +110,14 @@ bool GolfBall::IsWallHit()
 
 void GolfBall::HandlePhysics(float dt)
 {
+	Physics::RaycastPayload FuturePos;
 	Velocity += Acceleration * dt;
-	Position += Velocity * dt;
+	FuturePos = Physics::Raycast(Position, Velocity, glm::length(Velocity * dt) + 0.05f);
+	if (FuturePos.hit) {
+		Position = FuturePos.hitPoint - glm::normalize(Velocity) * 0.05f;
+	}
+	else
+		Position += Velocity * dt;
 	Acceleration = glm::vec3(0,0,0);
 }
 

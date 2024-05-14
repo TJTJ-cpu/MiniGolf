@@ -240,7 +240,7 @@ void RenderLine(RenderCommand* command)
 		glDepthRange(0.0f, 0.01f);
 	}
 
-	glPolygonMode(GL_FRONT, GL_LINE);
+	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 	glLineWidth(lineCommand->linewidth);
 
 	glBindVertexArray(vao[DebugShape::LINE]);
@@ -266,7 +266,7 @@ void RenderLine(RenderCommand* command)
 	glBindVertexArray(0);
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 
-	glPolygonMode(GL_FRONT, GL_FILL);
+	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
 	if ((lineCommand->rendermode & RenderMode::AlwaysOnTop) == RenderMode::AlwaysOnTop)
 	{
