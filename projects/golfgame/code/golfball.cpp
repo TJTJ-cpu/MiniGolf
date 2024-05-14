@@ -29,23 +29,28 @@ void GolfBall::Draw()
 
 void GolfBall::Update(float dt)
 {
+	/// FRICTION CONSTANT
 	float c = 0.3;
 	glm::vec3 Friction = -glm::normalize(Velocity) * c;
+
+	/// IF THE VELOCITY IS CLOSE TO ZERO JUST SET IT TO ZERO
 	if (glm::length(Velocity) < 0.005) {
 		Velocity.x = 0;
 		Velocity.z = 0;
 	}
+
 	if (glm::length(Velocity) > 0) 
 		AddForce(Friction);
+
 	IsWallHit();
 	IsGrounded();
+
 	Transform = glm::translate(Position);
 }
 
 bool GolfBall::IsGrounded()
 {
 	Physics::RaycastPayload HitResult;
-	float BallRadius = 0.03;
 
 	bool bGrounded = false;
 
@@ -74,7 +79,6 @@ bool GolfBall::IsWallHit()
 
 	std::vector<glm::vec3> WallDirections;
 
-	float BallRadius = 0.04;
 	bool bIsWalled = false;
 
 	/// Create rays in all directions

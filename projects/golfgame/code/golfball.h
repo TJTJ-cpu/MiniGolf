@@ -18,6 +18,7 @@ public:
 	float Speed;
 	float Gravity = 3.5;
 	float FrictionForce = 0.9;
+	float BallRadius = 0.05;
 
 	void Draw();
 	void Update(float dt);

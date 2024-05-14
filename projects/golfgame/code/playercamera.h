@@ -18,6 +18,16 @@ public:
 
 	glm::vec3 BallHitDirection;
 
+	/// THIRD PERSON CAMERA VARIABLES
+	bool ThirdPersonCam = false;
+	bool FirstPress = true;
+	float OrbitPoint = 0;
+	float OrbitSpeed = 5;
+	float OrbitDistance = 3.0f;
+	float MinOrbitDistance = 1.0f;
+	float MaxOrbitDistance = 5.0f;
+	float ZoomSpeed = 0.1f;
+
 	float MovementSpeed = 5.0f;
 	float ClubMovementSpeed = 4.2f;
 	float VerticleSpeed = 2.0f;

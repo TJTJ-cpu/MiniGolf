@@ -232,7 +232,7 @@ SpaceGameApp::Run()
 
     SpaceShip ship;
     ship.model = LoadModel("assets/space/spaceship.glb");
-    PlayerCamera GodEye(glm::vec3((0.95 * 2), 1.1, 0.05), glm::vec3(-1, 1, 0), glm::vec3(0, 0, 0));
+    PlayerCamera GodEye(glm::vec3((0.95 * 2), 1.1, 0.05), glm::vec3(0, 2, 0), glm::vec3(0, 0, 0));
 
     std::clock_t c_start = std::clock();
     double dt = 0.01667f;
