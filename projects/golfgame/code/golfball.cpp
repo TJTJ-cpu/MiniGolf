@@ -1,7 +1,7 @@
 #include "golfball.h"
 #include "render/physics.h"
 #include <iostream>
-
+#include "render/debugrender.h"
 
 GolfBall::GolfBall() 
 {
@@ -35,14 +35,14 @@ void GolfBall::Update(float dt)
 	if (glm::length(Velocity) > 0) 
 		AddForce(Friction);
 	IsWallHit();
-	//IsGrounded();
+	IsGrounded();
 	Transform = glm::translate(Position);
 }
 
 bool GolfBall::IsGrounded()
 {
 	Physics::RaycastPayload HitResult;
-	float BallRadius = 0.07;
+	float BallRadius = 0.10;
 
 	bool bGrounded = false;
 
@@ -69,7 +69,7 @@ bool GolfBall::IsWallHit()
 
 	std::vector<glm::vec3> WallDirections;
 
-	float BallRadius = 0.10;
+	float BallRadius = 0.07;
 	bool bIsWalled = false;
 	
 	/// Create rays in all directions
@@ -78,14 +78,25 @@ bool GolfBall::IsWallHit()
 	
 	for (glm::vec3 &Direction : WallDirections) {
 		HitResult = Physics::Raycast(this->Position, Direction, BallRadius);
+		Physics::RaycastPayload TESTDELETETHIS = Physics::Raycast(this->Position, Direction, 5);
+		if (TESTDELETETHIS.hit)
+			Debug::DrawLine(this->Position, TESTDELETETHIS.hitPoint, 1.0f, glm::vec4(0, 1, 0, 1), glm::vec4(0, 1, 0, 1), Debug::RenderMode::AlwaysOnTop);
+		else
+			Debug::DrawLine(this->Position, this->Position + Direction * 5.0f, 1.0f, glm::vec4(0, 1, 0, 1), glm::vec4(0, 1, 0, 1), Debug::RenderMode::AlwaysOnTop);
 		if (HitResult.hit) {
-			glm::vec3 Dir = Direction + glm::vec3(0.01, 0, 0.01);
+			glm::vec3 Dir = Direction + glm::vec3(0.001, 0, 0.001);
 			HitResultExtendedCheck = Physics::Raycast(this->Position, Dir, 1);
 			if (HitResultExtendedCheck.hit && !bIsWalled) {
 				glm::vec3 tangent = HitResult.hitPoint - HitResultExtendedCheck.hitPoint;
-				glm::vec3 normal = glm::cross(tangent, glm::vec3(0, 1, 0));
-				this->Velocity = Velocity - 2.0f * (glm::dot(Velocity, glm::normalize(normal))) * glm::normalize(normal);
-				bIsWalled = true;
+				glm::vec3 normal = glm::normalize(glm::cross(tangent, glm::vec3(0, 1, 0)));
+				if (glm::dot((this->Position - HitResult.hitPoint), normal) < 0) {
+					normal *= -1;
+				}
+				std::cout << normal.x << ", " << normal.y << ", " << normal.z << std::endl;
+				if (glm::dot(this->Velocity, normal) < 0) {
+					this->Velocity = Velocity - 2.0f * (glm::dot(Velocity, normal) * normal);
+					bIsWalled = true;
+				}
 			}
 		}
 	}

@@ -105,7 +105,7 @@ public:
 				ClubPos.y = 0;
 			}
 			else {
-				this->Ball.AddForce(BallHitDirection * 50.3f * DistanceFromClubToTheGolfBall);
+				this->Ball.AddForce(BallHitDirection * 100.3f * DistanceFromClubToTheGolfBall);
 				Club.bIsMovingTowardBall = false;
 			}
 		}

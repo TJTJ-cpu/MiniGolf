@@ -104,15 +104,16 @@ SpaceGameApp::Run()
     ModelId Windmill = LoadModel("assets/golf/windmill.glb");
     ModelId BlueGolfBall = LoadModel("assets/golf/ball-blue.glb");
 
-    Physics::ColliderMeshId mFlag = Physics::LoadColliderMesh("assets/golf/flag-red.glb");
     Physics::ColliderMeshId mHoleOpen = Physics::LoadColliderMesh("assets/golf/hole-open.glb");
-    Physics::ColliderMeshId mCorner = Physics::LoadColliderMesh("assets/golf/corner.glb");
     Physics::ColliderMeshId mStart = Physics::LoadColliderMesh("assets/golf/start.glb");
-    Physics::ColliderMeshId mCastle = Physics::LoadColliderMesh("assets/golf/castle.glb");
     Physics::ColliderMeshId mOpen = Physics::LoadColliderMesh("assets/golf/open.glb");
-    Physics::ColliderMeshId mSide = Physics::LoadColliderMesh("assets/golf/side.glb");
-    Physics::ColliderMeshId mWindmill = Physics::LoadColliderMesh("assets/golf/windmill.glb");
     Physics::ColliderMeshId mBlueGolfBall = Physics::LoadColliderMesh("assets/golf/ball-blue.glb");
+    Physics::ColliderMeshId mWall = Physics::LoadColliderMesh("assets/golf/wallPhysicCollision.glb");
+
+	struct ColliderId {
+		std::vector<Physics::ColliderMeshId> CollisionShapes;
+        glm::vec2 Coordinate;
+	};
 
     // load all resources
     ModelId models[6] = {
@@ -122,12 +123,6 @@ SpaceGameApp::Run()
         LoadModel("assets/golf/ball-blue.glb"),
         LoadModel("assets/golf/ball-red.glb"),
         LoadModel("assets/golf/ball-green.glb")
-        //LoadModel("assets/golf/windmill.glb"),
-        //LoadModel("assets/golf/windmill.glb"),
-        //LoadModel("assets/golf/windmill.glb"),
-        //LoadModel("assets/golf/windmill.glb"),
-        //LoadModel("assets/golf/windmill.glb"),
-        //LoadModel("assets/golf/windmill.glb")
     };
     Physics::ColliderMeshId tileMeshCollisder[6] = {
         LoadModel("assets/golf/ball-blue.glb"),
@@ -171,7 +166,7 @@ SpaceGameApp::Run()
     }
 
     int width = 3;
-    std::string Map = "cScSoSSCSSoSSoScHc";
+    std::string Map = "cScSoSSoSSoSSoSSHScSc";
     // THIS SHIT IS BOTTOM UP
     // FROM THE SPACESHIP'S SPAWN PERSPECTIVE X INCREASES LEFT AND Y UP
     std::vector<int> Rotations = {  2,1,1,
@@ -179,11 +174,12 @@ SpaceGameApp::Run()
                                     2,0,0,
                                     2,0,0,
                                     2,0,0,
-                                    3,2,0 };
+                                    2,0,0,
+                                    3,3,0 };
     int height;
     height = Map.length() / width;
     std::vector<std::tuple<ModelId, glm::mat4, Physics::ColliderId>> PlatformTiles;
-    int offSet = 1;
+    float offSet = 0.95;
     for (int x = 0; x < width; x++) 
     {
         for (int y = 0; y < height; y++)
@@ -195,19 +191,25 @@ SpaceGameApp::Run()
             std::cout << "x: " << x << " width: " << width << " y: " << y << " = " << y * width + x << std::endl;
             if (Map[y * width + x] == 'c') {
                 std::get<0>(Tile) = Corner;
-				std::get<2>(Tile) = Physics::CreateCollider(mCorner, Transform);
+				std::get<2>(Tile) = Physics::CreateCollider(mOpen, Transform);
+				std::get<2>(Tile) = Physics::CreateCollider(mWall, Transform * glm::rotate(-3.141592653f / 2 , glm::vec3(0,1,0)));
+				std::get<2>(Tile) = Physics::CreateCollider(mWall, Transform );
+				//std::get<2>(Tile) = Physics::CreateCollider(mWall, Transform * glm::rotate(-3.141592653f , glm::vec3(0,1,0)));
             }
             else if (Map[y * width + x] == 'C') {
                 std::get<0>(Tile) = Castle;
-                std::get<2>(Tile) = Physics::CreateCollider(mCastle, Transform);
+                std::get<2>(Tile) = Physics::CreateCollider(mOpen, Transform);
             }
             else if (Map[y * width + x] == 'S') {
                 std::get<0>(Tile) = Side;
-                std::get<2>(Tile) = Physics::CreateCollider(mSide, Transform);
+                std::get<2>(Tile) = Physics::CreateCollider(mOpen, Transform);
+                std::get<2>(Tile) = Physics::CreateCollider(mWall, Transform * glm::translate(glm::vec3(0, 0, 0.1)));
+                std::get<2>(Tile) = Physics::CreateCollider(mWall, Transform * glm::translate(glm::vec3(0, 0, -0.1)));
+				std::get<2>(Tile) = Physics::CreateCollider(mWall, Transform);
             }
             else if (Map[y * width + x] == 's') {
                 std::get<0>(Tile) = Windmill;
-                std::get<2>(Tile) = Physics::CreateCollider(mWindmill, Transform);
+                std::get<2>(Tile) = Physics::CreateCollider(mOpen, Transform);
             }
             else if (Map[y * width + x] == 'H') {
                 std::get<0>(Tile) = HoleOpen;
