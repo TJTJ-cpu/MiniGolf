@@ -18,11 +18,13 @@ public:
 	std::vector<MyTile> PlatformTiles;
 	std::string tMap;
 	int tWidth;
+	glm::vec3 BallSpawn;
 
-	void SpawnMap(int width, std::string Map, std::vector<int> Rotations)
+	void SpawnMap(int width, std::string Map, std::vector<int> Rotations, glm::vec3 Spawn)
 	{
 		tMap = Map;
 		tWidth = width;
+		BallSpawn = Spawn;
 		Render::ModelId Flag = Render::LoadModel("assets/golf/flag-red.glb");
 		Render::ModelId HoleOpen = Render::LoadModel("assets/golf/hole-open.glb");
 		Render::ModelId Corner = Render::LoadModel("assets/golf/corner.glb");
@@ -112,7 +114,10 @@ public:
 		char result;
 		int x = xCoor + 0.5;	
 		int z = zCoor + 0.5;	
-		result = tMap[z * tWidth + x];
+		int Index = z * tWidth + x;
+		if (Index >= tMap.length())
+			return ' ';
+		result = tMap[Index];
 		return result;
 	}
 };

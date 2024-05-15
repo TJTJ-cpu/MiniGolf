@@ -25,6 +25,8 @@
 #include "playercamera.h"
 #include "tilemanager.h"
 
+#include "gamepad.h"
+
 using namespace Display;
 using namespace Render;
 
@@ -119,7 +121,16 @@ SpaceGameApp::Run()
 									2,0,0,
 									3,3,0 };
     TileManager Tile;
-    Tile.SpawnMap(Four, Map1, Map1Rotations);
+    TileManager Tile2;
+    Tile.SpawnMap(Four, Map1, Map1Rotations, glm::vec3(2, 1, 0));
+    Tile2.SpawnMap(Three, Map, Rotations, glm::vec3(1,1,1));
+    
+    /// MOVES THE UNRELATED SHIT OUTTA THE WAY
+    for (auto& tile : Tile2.PlatformTiles)
+        Physics::SetTransform(tile.Collider, glm::translate(glm::vec3(99, 99, 99)));
+
+    std::vector<TileManager> AllMaps = { Tile, Tile2 };
+    int CurrentMap = 0;
 
 	struct ColliderId {
 		std::vector<Physics::ColliderMeshId> CollisionShapes;
@@ -232,14 +243,39 @@ SpaceGameApp::Run()
 
     SpaceShip ship;
     ship.model = LoadModel("assets/space/spaceship.glb");
-    PlayerCamera GodEye(glm::vec3((0.95 * 2), 1.1, 0.05), glm::vec3(0, 2, 0), glm::vec3(0, 0, 0));
+    GolfInput::Gamepad gamepad;
+    PlayerCamera GodEye(&gamepad, AllMaps[CurrentMap].BallSpawn, glm::vec3(0, 2, 0), glm::vec3(0, 0, 0));
 
     std::clock_t c_start = std::clock();
     double dt = 0.01667f;
 
+
     /// game loop
     while (this->window->IsOpen())
 	{
+        gamepad.Update();
+
+        if (gamepad.Pressed[GolfInput::Gamepad::Button::SELECT]) {
+            GodEye.CurrentTime = 0;
+            for (auto &tile : AllMaps[CurrentMap].PlatformTiles) {
+                Physics::SetTransform(tile.Collider, glm::translate(glm::vec3(99, 99, 99)));
+            }
+
+            CurrentMap++;
+            if (CurrentMap == AllMaps.size())
+                CurrentMap = 0;
+
+            GodEye.Ball.Position = AllMaps[CurrentMap].BallSpawn;
+            GodEye.Ball.Velocity = glm::vec3(0,0,0);
+
+            for (auto &tile : AllMaps[CurrentMap].PlatformTiles) {
+                Physics::SetTransform(tile.Collider, tile.Transform);
+            }
+            GodEye.IsGameWon = false;
+            GodEye.Score = 0;
+            GodEye.Club.bIsMovingTowardBall = false;
+        }
+
         auto timeStart = std::chrono::steady_clock::now();
 		glClear(GL_DEPTH_BUFFER_BIT);
 		glEnable(GL_DEPTH_TEST);
@@ -262,20 +298,26 @@ SpaceGameApp::Run()
         for (auto const& asteroid : asteroids) {
             RenderDevice::Draw(std::get<0>(asteroid), std::get<2>(asteroid));
         }
-        for (auto const& a : Tile.PlatformTiles) {
-            RenderDevice::Draw(a.Model, a.Transform);
+
+        for (auto const& a : AllMaps[CurrentMap].PlatformTiles) {
+           RenderDevice::Draw(a.Model, a.Transform);
         }
+
         GodEye.Draw();
-        if (Tile.SearchWhereAmI(GodEye.Ball.Position.x, GodEye.Ball.Position.z) == 'h') {
+
+        char CurrentTile = AllMaps[CurrentMap].SearchWhereAmI(GodEye.Ball.Position.x, GodEye.Ball.Position.z);
+        if (CurrentTile == 'h' || CurrentTile == 'H') {
 			GodEye.Ball.CurrGravity = GodEye.HighGravity;
+            /// WIN CONDITION
             if (GodEye.Ball.HeightOfTheLastFrameOfTheBall > GodEye.Ball.Position.y && !GodEye.IsGameWon) {
-                std::cout << "You win with the score of " << GodEye.Score << std::endl;
                 GodEye.IsGameWon = true;
             }
         }
         else
 			GodEye.Ball.CurrGravity = GodEye.LowGravity;
+
         GodEye.Ball.HeightOfTheLastFrameOfTheBall = GodEye.Ball.Position.y;
+
         if (GodEye.IsGameWon) {
 			GodEye.EnterHighScoreName();
 			GodEye.RenderHighScore(window->vg);
@@ -296,7 +338,7 @@ SpaceGameApp::Run()
         auto timeEnd = std::chrono::steady_clock::now();
         dt = std::min(0.04, std::chrono::duration<double>(timeEnd - timeStart).count());
 
-        if (kbd->pressed[Input::Key::Code::Escape])
+        if (kbd->pressed[Input::Key::Code::Escape] || gamepad.Pressed[GolfInput::Gamepad::Button::START])
             this->Exit();
 	}
 }

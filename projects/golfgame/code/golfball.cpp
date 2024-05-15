@@ -57,7 +57,7 @@ bool GolfBall::IsGrounded()
 	std::vector<glm::vec3> GroundedDirections = { glm::vec3(0,-1,0) };// , glm::vec3(0.33, -1, 0), glm::vec3(-0.33, -1, 0), glm::vec3(0, -1, 0.33), glm::vec3(0, -1, -0.33) };
 	for (auto Direction : GroundedDirections)
 	{
-		HitResult = Physics::Raycast(this->Position, Direction, BallRadius);
+		HitResult = Physics::Raycast(this->Position, Direction, BallRadius + 0.02f);
 		if (HitResult.hit)
 			bGrounded = true;
 	}
@@ -65,7 +65,7 @@ bool GolfBall::IsGrounded()
 		this->AddForce(glm::vec3(0, -CurrGravity, 0));
 	}
 	else {
-		this->Velocity.y *= -0.5f;
+		this->Velocity.y = 0.0f;
 
 	}
 	//std::cout << std::boolalpha << bGrounded<< std::endl;
@@ -116,16 +116,22 @@ bool GolfBall::IsWallHit()
 
 void GolfBall::HandlePhysics(float dt)
 {
-	PrevPosition = Position;
+	//PrevPosition = Position;
 	Velocity += Acceleration * dt;
 	Position += Velocity * dt;
 
+	/// REFLECT VELOCITY IF WE ARE MOVING INTO OR THROUGH A WALL
 	//Physics::RaycastPayload NextHit;
 	//NextHit = Physics::Raycast(Position, Velocity, glm::length(Velocity * dt));
 	//if (NextHit.hit)
-	//	Position = NextHit.hitPoint - glm::normalize(Velocity) * 0.05f;
+	//{
+	//	float RemainingDistance = glm::length(Velocity * dt) - NextHit.hitDistance;
+	//	Velocity = Velocity - 2.0f * (glm::dot(Velocity, NextHit.hitNormal) * NextHit.hitNormal);
+	//	Position = NextHit.hitPoint + glm::normalize(Velocity) * BallRadius + glm::normalize(Velocity) * RemainingDistance;
+	//}
 	//else 
 	//	Position += Velocity * dt;
+
 	Acceleration = glm::vec3(0,0,0);
 }
 

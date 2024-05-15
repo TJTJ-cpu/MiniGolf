@@ -1,18 +1,20 @@
 #pragma once
 #include "golfball.h"
 #include "golfclub.h"
+#include "gamepad.h"
 
 class PlayerCamera
 {
 public:
 	PlayerCamera();
-	PlayerCamera(glm::vec3 pos, glm::vec3 offset, glm::vec3 rot);
+	PlayerCamera(GolfInput::Gamepad* gm, glm::vec3 pos, glm::vec3 offset, glm::vec3 rot);
 
 	glm::mat4 Transform;
 	glm::vec3 Position;
 	glm::vec3 Rotation;
 	glm::vec3 OffSet;
 
+	GolfInput::Gamepad* gamepad;
 	GolfBall Ball;
 	GolfClub Club;
 
@@ -23,6 +25,7 @@ public:
 	bool FirstPress = true;
 	bool IsGameWon = false;
 	bool bIsPress = false;
+	float CurrentTime = 0;
 	float OrbitPoint = 0;
 	float OrbitSpeed = 5;
 	float OrbitDistance = 3.0f;

@@ -10,7 +10,7 @@ PlayerCamera::PlayerCamera()
 {
 }
 
-PlayerCamera::PlayerCamera(glm::vec3 pos, glm::vec3 offset, glm::vec3 rot) : Rotation(rot)
+PlayerCamera::PlayerCamera(GolfInput::Gamepad* gm, glm::vec3 pos, glm::vec3 offset, glm::vec3 rot) : Rotation(rot), gamepad(gm)
 {
 	Transform = glm::translate(pos);
 	OffSet = offset;
@@ -23,6 +23,7 @@ PlayerCamera::PlayerCamera(glm::vec3 pos, glm::vec3 offset, glm::vec3 rot) : Rot
 
 void PlayerCamera::Update(float DeltaSeconds)
 {
+	CurrentTime += DeltaSeconds;
 	Ball.Update(DeltaSeconds);
 	this->Club.Position.y = this->Ball.Position.y + 0.7f;
 
@@ -60,21 +61,17 @@ void PlayerCamera::Update(float DeltaSeconds)
 	ClubPos.y = 0;
 
 	/// IF THE ACTION BUTTON IS PRESSED GO TOWARDS TO BALL
-	if (Hit[0] == GLFW_PRESS && !Club.bIsMovingTowardBall && (glm::length(Ball.Velocity) < 0.1)) {
+	//if (Hit[0] == GLFW_PRESS && !Club.bIsMovingTowardBall && (glm::length(Ball.Velocity) < 0.1) && CurrentTime > 1.0f) {
+	if (gamepad->Pressed[GolfInput::Gamepad::Button::A_BUTTON] && !Club.bIsMovingTowardBall && (glm::length(Ball.Velocity) < 0.1)) {
 		Club.bIsMovingTowardBall = true;
 		DistanceFromClubToTheGolfBall = glm::distance(this->Ball.Position, this->Club.Position);
 		BallHitDirection = glm::normalize(BallPos - ClubPos);
 	}
 
 	/// SWITCH CAMERA PERSPECTIVE
-	if (Hit[5] == GLFW_PRESS && FirstPress) {
-		FirstPress = false;
+	if (gamepad->Pressed[GolfInput::Gamepad::Button::RIGHT_SHOULDER_BUTTON]) {
 		ThirdPersonCam = !ThirdPersonCam;
 		OrbitPoint = 0;
-	}
-	else if (Hit[5] == GLFW_RELEASE)
-	{
-		FirstPress = true;
 	}
 
 	if (!Club.bIsMovingTowardBall) {
@@ -210,45 +207,32 @@ void PlayerCamera::CheckCollisions()
 }
 
 void PlayerCamera::EnterHighScoreName() {
-	int count;
-	const unsigned char* Hit = glfwGetJoystickButtons(GLFW_JOYSTICK_1, &count);
-	const float* axes = glfwGetJoystickAxes(GLFW_JOYSTICK_1, &count);
-	// Select = 6
-	bool Click = (Hit[10] == GLFW_PRESS || Hit[11] == GLFW_PRESS || Hit[12] == GLFW_PRESS || Hit[13] == GLFW_PRESS);
-	if (!Click)
-		bIsPress = false;
-	if (!bIsPress) {
-		bIsPress = true;
-		if (Hit[12] == GLFW_PRESS) {
-			Name[currentNameIndex]++;
-			if (Name[currentNameIndex] > 'Z')
-				Name[currentNameIndex] = 'A';
-		}
-		else if (Hit[11] == GLFW_PRESS) {
-			currentNameIndex++;
-			if (currentNameIndex >= Name.length())
-				currentNameIndex = 0;
-		}
-		else if (Hit[10] == GLFW_PRESS) {
-			Name[currentNameIndex]--;
-			if (Name[currentNameIndex] < 'A')
-				Name[currentNameIndex] = 'Z';
-		}
-		else if (Hit[13] == GLFW_PRESS) {
-			currentNameIndex--;
-			if (currentNameIndex < 0)
-				currentNameIndex = Name.length()-1;
-		}
-		else if (Hit[0] == GLFW_PRESS) {
-			WriteScoreToFile();
-			IsGameWon = false;
-			Score = 0;
-			Name = "AAA";
-			Ball.Position = glm::vec3(2, 1, 0);
-		}
-		else {
-			bIsPress = false;
-		}
+	if (gamepad->Pressed[GolfInput::Gamepad::Button::DPAD_DOWN]) {
+		Name[currentNameIndex]++;
+		if (Name[currentNameIndex] > 'Z')
+			Name[currentNameIndex] = 'A';
+	}
+	else if (gamepad->Pressed[GolfInput::Gamepad::Button::DPAD_RIGHT]) {
+		currentNameIndex++;
+		if (currentNameIndex >= Name.length())
+			currentNameIndex = 0;
+	}
+	else if (gamepad->Pressed[GolfInput::Gamepad::Button::DPAD_UP]) {
+		Name[currentNameIndex]--;
+		if (Name[currentNameIndex] < 'A')
+			Name[currentNameIndex] = 'Z';
+	}
+	else if (gamepad->Pressed[GolfInput::Gamepad::Button::DPAD_LEFT]) {
+		currentNameIndex--;
+		if (currentNameIndex < 0)
+			currentNameIndex = Name.length() - 1;
+	}
+	else if (gamepad->Pressed[GolfInput::Gamepad::Button::A_BUTTON]) {
+		WriteScoreToFile();
+		IsGameWon = false;
+		Score = 0;
+		Name = "AAA";
+		Ball.Position = glm::vec3(2, 1, 0);
 	}
 }
 

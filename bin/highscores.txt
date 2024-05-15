@@ -4,3 +4,4 @@ CAG:7
 TXE:5
 DCF:6
 AAA:4
+EBC:8
