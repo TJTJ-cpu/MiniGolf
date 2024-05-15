@@ -62,7 +62,7 @@ bool GolfBall::IsGrounded()
 			bGrounded = true;
 	}
 	if (!bGrounded) {
-		this->AddForce(glm::vec3(0, -5, 0));
+		this->AddForce(glm::vec3(0, -CurrGravity, 0));
 	}
 	else {
 		this->Velocity.y *= -0.5f;
@@ -85,13 +85,12 @@ bool GolfBall::IsWallHit()
 	for (float i = 0; i < 2 * 3.141592f; i += (2 * 3.141592f) / 120)
 		WallDirections.push_back(glm::vec3(glm::cos(i), 0, glm::sin(i)));
 	
-	glm::vec3 rayOrigin = this->Position + glm::vec3(0.0f,-0.01f,0.0f);
+	glm::vec3 rayOrigin = this->Position + glm::vec3(0.0f,-0.03f,0.0f);
 
 	for (int i = 0; i < WallDirections.size(); i++) {
 		glm::vec3 &Direction = WallDirections[i];
-
 		HitResult = Physics::Raycast(rayOrigin, Direction, BallRadius);
- 	//	Physics::RaycastPayload TESTDELETETHIS = Physics::Raycast(rayOrigin, Direction, 5);
+		//Physics::RaycastPayload TESTDELETETHIS = Physics::Raycast(rayOrigin, Direction, 5);
 		//if (TESTDELETETHIS.hit)
 		//	Debug::DrawLine(rayOrigin, TESTDELETETHIS.hitPoint, 2.0f, glm::vec4(0, 1, 0, 1), glm::vec4(0, 1, 0, 1), Debug::RenderMode::Normal);
 		//else
@@ -105,8 +104,6 @@ bool GolfBall::IsWallHit()
 				if (glm::dot((rayOrigin - HitResult.hitPoint), normal) < 0) {
 					normal *= -1;
 				}
-				std::cout << normal.x << ", " << normal.y << ", " << normal.z << ", " << std::endl;
-
 				if (glm::dot(this->Velocity, normal) < 0) {
 					this->Velocity = Velocity - 2.0f * (glm::dot(Velocity, normal) * normal);
 					bIsWalled = true;

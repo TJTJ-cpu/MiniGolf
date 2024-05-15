@@ -4,6 +4,7 @@
 #include "render/cameramanager.h"
 #include "render/debugrender.h"
 #include <iostream>
+#include <fstream>
 
 PlayerCamera::PlayerCamera()
 {
@@ -16,6 +17,8 @@ PlayerCamera::PlayerCamera(glm::vec3 pos, glm::vec3 offset, glm::vec3 rot) : Rot
 	Position = OffSet;
 	Ball = GolfBall(pos, "assets/golf/ball-blue.glb");
 	Club = GolfClub(pos + glm::vec3(0, 0.7, -1), "assets/golf/club-blue.glb", 4);
+
+	float minX, minY, maxX, maxY;
 }
 
 void PlayerCamera::Update(float DeltaSeconds)
@@ -103,8 +106,10 @@ void PlayerCamera::Update(float DeltaSeconds)
 			ClubPos.y = 0;
 		}
 		else {
-			this->Ball.AddForce(BallHitDirection * 75.3f * DistanceFromClubToTheGolfBall);
+			this->Ball.AddForce(BallHitDirection * 75.3f * (DistanceFromClubToTheGolfBall * DistanceFromClubToTheGolfBall));
 			Club.bIsMovingTowardBall = false;
+			Score++;
+			std::cout << Score << std::endl;
 		}
 	}
 
@@ -181,15 +186,20 @@ void PlayerCamera::Update(float DeltaSeconds)
 
 void PlayerCamera::Draw()
 {
+	//std::cout << "x: " << Ball.Position.x << ", z: " << Ball.Position.z << std::endl;
+
+	Debug::DrawDebugText("HsjflksdajflkasdjflksadjlkfsjlkdfasjfksadjfsadjkfsIT", Ball.Position + glm::vec3(0,0.2,0), glm::vec4(1, 1, 1, 1));
+	Debug::DrawLine(Ball.Position, Ball.Position + glm::vec3(0, 0.2, 0), 1.0f, glm::vec4(1,0,1,1),glm::vec4(1,1,1,1));
 	if (glm::length(this->Ball.Velocity) < 0.05) {
 		this->Club.Draw();
 	}
 	else {
-		Debug::DrawDebugText("HsjflksdajflkasdjflksadjlkfsjlkdfasjfksadjfsadjkfsIT", Ball.Position, glm::vec4(0, 0, 0, 1));
 		this->Club.Position = this->Ball.Position + glm::vec3(0, 0, -1);
 	}
 	this->Ball.Draw();
 }
+
+
 
 void PlayerCamera::CheckCollisions()
 {
@@ -198,3 +208,77 @@ void PlayerCamera::CheckCollisions()
 	/// CHECK IF CLUB IS COLLIDING WITH WALL
 
 }
+
+void PlayerCamera::EnterHighScoreName() {
+	int count;
+	const unsigned char* Hit = glfwGetJoystickButtons(GLFW_JOYSTICK_1, &count);
+	const float* axes = glfwGetJoystickAxes(GLFW_JOYSTICK_1, &count);
+	// Select = 6
+	bool Click = (Hit[10] == GLFW_PRESS || Hit[11] == GLFW_PRESS || Hit[12] == GLFW_PRESS || Hit[13] == GLFW_PRESS);
+	if (!Click)
+		bIsPress = false;
+	if (!bIsPress) {
+		bIsPress = true;
+		if (Hit[12] == GLFW_PRESS) {
+			Name[currentNameIndex]++;
+			if (Name[currentNameIndex] > 'Z')
+				Name[currentNameIndex] = 'A';
+		}
+		else if (Hit[11] == GLFW_PRESS) {
+			currentNameIndex++;
+			if (currentNameIndex >= Name.length())
+				currentNameIndex = 0;
+		}
+		else if (Hit[10] == GLFW_PRESS) {
+			Name[currentNameIndex]--;
+			if (Name[currentNameIndex] < 'A')
+				Name[currentNameIndex] = 'Z';
+		}
+		else if (Hit[13] == GLFW_PRESS) {
+			currentNameIndex--;
+			if (currentNameIndex < 0)
+				currentNameIndex = Name.length()-1;
+		}
+		else if (Hit[0] == GLFW_PRESS) {
+			WriteScoreToFile();
+			IsGameWon = false;
+			Score = 0;
+			Name = "AAA";
+			Ball.Position = glm::vec3(2, 1, 0);
+		}
+		else {
+			bIsPress = false;
+		}
+	}
+}
+
+void PlayerCamera::WriteScoreToFile() {
+	std::ofstream ScoreFile("highscores.txt", std::ios::app);
+	ScoreFile << Name << ":" << Score << "\n";
+	ScoreFile.close();
+}
+
+void PlayerCamera::RenderHighScore(NVGcontext* vg) {
+    nvgFontSize(vg, 56.0f);
+    nvgFontFace(vg, "sans");
+    nvgFillColor(vg, nvgRGBA(255, 255, 255, 128));
+	const char* CName = Name.c_str();
+	std::string Hat = "     ";
+	Hat[currentNameIndex * 2] = '^';
+	const char* cHat = Hat.c_str();
+    nvgText(vg, 600, 380, "YOU WIN!!!!", NULL);
+    nvgText(vg, 600, 430, CName, NULL);
+    nvgText(vg, 600, 480, cHat, NULL);
+}
+
+void PlayerCamera::RenderScore(NVGcontext* vg) {
+    nvgFontSize(vg, 56.0f);
+    nvgFontFace(vg, "sans");
+    nvgFillColor(vg, nvgRGBA(255, 255, 255, 128));
+	std::string sScore = std::to_string(Score);
+	const char* cScore = sScore.c_str();
+    nvgText(vg, 60, 60, "Score: ", NULL);
+    nvgText(vg, 80, 120, cScore, NULL);
+}
+
+

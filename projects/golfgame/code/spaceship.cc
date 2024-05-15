@@ -10,6 +10,7 @@ using namespace Input;
 using namespace glm;
 using namespace Render;
 
+
 namespace Game
 {
 SpaceShip::SpaceShip()

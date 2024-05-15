@@ -119,7 +119,7 @@ SpaceGameApp::Run()
 									2,0,0,
 									3,3,0 };
     TileManager Tile;
-    Tile.SpawnMap(Three, Map, Rotations);
+    Tile.SpawnMap(Four, Map1, Map1Rotations);
 
 	struct ColliderId {
 		std::vector<Physics::ColliderMeshId> CollisionShapes;
@@ -266,7 +266,23 @@ SpaceGameApp::Run()
             RenderDevice::Draw(a.Model, a.Transform);
         }
         GodEye.Draw();
-
+        if (Tile.SearchWhereAmI(GodEye.Ball.Position.x, GodEye.Ball.Position.z) == 'h') {
+			GodEye.Ball.CurrGravity = GodEye.HighGravity;
+            if (GodEye.Ball.HeightOfTheLastFrameOfTheBall > GodEye.Ball.Position.y && !GodEye.IsGameWon) {
+                std::cout << "You win with the score of " << GodEye.Score << std::endl;
+                GodEye.IsGameWon = true;
+            }
+        }
+        else
+			GodEye.Ball.CurrGravity = GodEye.LowGravity;
+        GodEye.Ball.HeightOfTheLastFrameOfTheBall = GodEye.Ball.Position.y;
+        if (GodEye.IsGameWon) {
+			GodEye.EnterHighScoreName();
+			GodEye.RenderHighScore(window->vg);
+        }
+        else {
+            GodEye.RenderScore(window->vg);
+        }
         //Physics::DebugDrawColliders();
 
         //RenderDevice::Draw(ship.model, ship.transform);
@@ -302,7 +318,7 @@ SpaceGameApp::RenderUI()
 {
 	if (this->window->IsOpen())
 	{
-        
+
 
         //Debug::DispatchDebugTextDrawing();
 	}
@@ -317,7 +333,6 @@ SpaceGameApp::RenderNanoVG(NVGcontext* vg)
     nvgSave(vg);
 
     nvgBeginPath(vg);
-    //nvgCircle(vg, 600, 100, 50);
     NVGpaint paint;
     paint = nvgLinearGradient(vg, 600, 100, 650, 150, nvgRGBA(255, 0, 0, 255), nvgRGBA(0, 255, 0, 255));
     nvgFillPaint(vg, paint);
@@ -330,9 +345,9 @@ SpaceGameApp::RenderNanoVG(NVGcontext* vg)
     nvgStrokeColor(vg, nvgRGBA(0, 0, 0, 32));
     nvgStroke(vg);
 
-    nvgFontSize(vg, 16.0f);
-    nvgFontFace(vg, "sans");
-    nvgFillColor(vg, nvgRGBA(255, 255, 255, 128));
+    //nvgFontSize(vg, 16.0f);
+    //nvgFontFace(vg, "sans");
+    //nvgFillColor(vg, nvgRGBA(255, 255, 255, 128));
     //nvgText(vg, 0, 30, "Testing, testing... Everything seems to be in order.", NULL);
 
     nvgRestore(vg);

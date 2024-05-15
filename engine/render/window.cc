@@ -438,7 +438,7 @@ Window::SwapBuffers()
 			nvgEndFrame(this->vg);
 		}
 
-		//ImGui::NewFrame();
+//ImGui::NewFrame();
 		if (nullptr != this->uiFunc)
 			this->uiFunc();
 		

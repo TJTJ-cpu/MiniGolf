@@ -112,6 +112,7 @@ private:
 	int32 height;
 	std::string title;
 	GLFWwindow* window;
+public:
 	NVGcontext* vg;
 };
 

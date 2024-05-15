@@ -16,7 +16,8 @@ public:
 	Render::ModelId Model;
 
 	float Speed;
-	float Gravity = 3.5;
+	float HeightOfTheLastFrameOfTheBall;
+	float CurrGravity = 5.5f;
 	float FrictionForce = 0.9;
 	float BallRadius = 0.05;
 

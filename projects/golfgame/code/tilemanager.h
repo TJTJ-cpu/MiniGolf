@@ -16,9 +16,13 @@ class TileManager
 public:
 	TileManager() {}
 	std::vector<MyTile> PlatformTiles;
+	std::string tMap;
+	int tWidth;
 
 	void SpawnMap(int width, std::string Map, std::vector<int> Rotations)
 	{
+		tMap = Map;
+		tWidth = width;
 		Render::ModelId Flag = Render::LoadModel("assets/golf/flag-red.glb");
 		Render::ModelId HoleOpen = Render::LoadModel("assets/golf/hole-open.glb");
 		Render::ModelId Corner = Render::LoadModel("assets/golf/corner.glb");
@@ -44,7 +48,7 @@ public:
 		int height;
 		height = Map.length() / width;
 
-		float offSet = 0.95;
+		float offSet = 1.0f;
 		for (int x = 0; x < width; x++)
 		{
 			for (int y = 0; y < height; y++)
@@ -102,5 +106,13 @@ public:
 				//}
 			}
 		}
+	}
+
+	char SearchWhereAmI(float xCoor, float zCoor) {
+		char result;
+		int x = xCoor + 0.5;	
+		int z = zCoor + 0.5;	
+		result = tMap[z * tWidth + x];
+		return result;
 	}
 };
