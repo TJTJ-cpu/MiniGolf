@@ -2,6 +2,7 @@
 #include "golfball.h"
 #include "golfclub.h"
 #include "gamepad.h"
+#include <vector>
 
 class PlayerCamera
 {
@@ -25,6 +26,7 @@ public:
 	bool FirstPress = true;
 	bool IsGameWon = false;
 	bool bIsPress = false;
+	bool bStartGame = true;
 	float CurrentTime = 0;
 	float OrbitPoint = 0;
 	float OrbitSpeed = 5;
@@ -43,6 +45,7 @@ public:
 	float DistanceFromClubToTheGolfBall;
 
 	std::string Name = "AAA";
+	std::vector<std::string>OldScores;
 	int currentNameIndex = 0;
 
 	void Update(float DeltaSeconds);
@@ -52,4 +55,6 @@ public:
 	void WriteScoreToFile();
 	void RenderHighScore(NVGcontext* vg);
 	void RenderScore(NVGcontext* vg);
+	void RenderOldScore(NVGcontext* vg);
+	std::vector<const char*> GetOldScore();
 };

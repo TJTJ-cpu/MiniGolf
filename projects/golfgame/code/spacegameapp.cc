@@ -3,6 +3,7 @@
 // (C) 2022 Individual contributors, see AUTHORS file
 //------------------------------------------------------------------------------
 #include "config.h"
+#include <map>
 #include "golfball.h"
 #include "spacegameapp.h"
 #include <cstring>
@@ -274,6 +275,7 @@ SpaceGameApp::Run()
             GodEye.IsGameWon = false;
             GodEye.Score = 0;
             GodEye.Club.bIsMovingTowardBall = false;
+            GodEye.bStartGame = true;
         }
 
         auto timeStart = std::chrono::steady_clock::now();
@@ -303,6 +305,12 @@ SpaceGameApp::Run()
            RenderDevice::Draw(a.Model, a.Transform);
         }
 
+        if (GodEye.bStartGame) {
+            std::cout << "Once " << std::endl;
+            GodEye.GetOldScore();
+            GodEye.bStartGame = false;
+        }
+        
         GodEye.Draw();
 
         char CurrentTile = AllMaps[CurrentMap].SearchWhereAmI(GodEye.Ball.Position.x, GodEye.Ball.Position.z);
@@ -317,6 +325,8 @@ SpaceGameApp::Run()
 			GodEye.Ball.CurrGravity = GodEye.LowGravity;
 
         GodEye.Ball.HeightOfTheLastFrameOfTheBall = GodEye.Ball.Position.y;
+        std::vector<const char*> temp;
+        temp = GodEye.GetOldScore();
 
         if (GodEye.IsGameWon) {
 			GodEye.EnterHighScoreName();
@@ -324,6 +334,7 @@ SpaceGameApp::Run()
         }
         else {
             GodEye.RenderScore(window->vg);
+            GodEye.RenderOldScore(window->vg);
         }
         //Physics::DebugDrawColliders();
 

@@ -4,7 +4,13 @@
 #include "render/cameramanager.h"
 #include "render/debugrender.h"
 #include <iostream>
+#include <map>
 #include <fstream>
+#include <ostream>
+#include <string>
+#include <algorithm>
+#include <sstream>
+#include <vector>
 
 PlayerCamera::PlayerCamera()
 {
@@ -238,7 +244,7 @@ void PlayerCamera::EnterHighScoreName() {
 
 void PlayerCamera::WriteScoreToFile() {
 	std::ofstream ScoreFile("highscores.txt", std::ios::app);
-	ScoreFile << Name << ":" << Score << "\n";
+	ScoreFile << Name << " " << Score << "\n";
 	ScoreFile.close();
 }
 
@@ -265,4 +271,69 @@ void PlayerCamera::RenderScore(NVGcontext* vg) {
     nvgText(vg, 80, 120, cScore, NULL);
 }
 
+void PlayerCamera::RenderOldScore(NVGcontext* vg) {
+    nvgFontSize(vg, 56.0f);
+    nvgFontFace(vg, "sans");
+    nvgFillColor(vg, nvgRGBA(255, 255, 255, 128));
+	std::string sScore = std::to_string(Score);
+	const char* cScore = sScore.c_str();
 
+    nvgText(vg, 60, 300, "HighScore: ", NULL);
+	int i = 350;
+	for (auto Score : OldScores) {
+		nvgText(vg, 60, i, Score.c_str(), NULL);
+		i += 50;
+	}
+
+}
+
+std::vector<const char*> PlayerCamera::GetOldScore() {
+	std::vector<const char*> CharVec;
+	std::map<std::string, int> ScoreMap;
+	std::string MyText;
+	std::ifstream MyFile("highscores.txt");
+	if (!MyFile.is_open()) {
+		return CharVec;
+	}
+	while (std::getline(MyFile, MyText)) {
+		std::istringstream iss(MyText);
+		std::string key;
+		int val;
+
+		if (!(iss >> key >> val)) {
+			std::cout << "iss Error" << std::endl;
+			continue;
+		}
+
+		ScoreMap[key] = val;
+	}
+
+	MyFile.close();
+
+	/// Find a way to sort the algorithm
+	//std::multimap<std::string, int>dst = flip_map(ScoreMap);
+
+	for (auto pair : ScoreMap) {
+		std::string Combined = pair.first + " " + std::to_string(pair.second);
+		OldScores.push_back(Combined);
+		CharVec.push_back(Combined.c_str());
+	}
+	return CharVec;
+}
+
+
+//https://stackoverflow.com/questions/5056645/sorting-stdmap-using-value
+template<typename A, typename B>
+std::pair<B, A> flip_pair(const std::pair<A, B>& p)
+{
+	return std::pair<B, A>(p.second, p.first);
+}
+
+template<typename A, typename B>
+std::multimap<B, A> flip_map(const std::map<A, B>& src)
+{
+	std::multimap<B, A> dst;
+	std::transform(src.begin(), src.end(), std::inserter(dst, dst.begin()),
+		flip_pair<A, B>);
+	return dst;
+}
