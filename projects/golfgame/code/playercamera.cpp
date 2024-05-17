@@ -182,16 +182,23 @@ void PlayerCamera::Update(float DeltaSeconds)
 
 
 		Club.Position += glm::vec3(glm::inverse(cam->view) * glm::vec4(ClubMovement, 0));
+
 	}
 
+	/// Guided Predictive Line
+	glm::vec3 BallVelNotY = Ball.Velocity;
+	BallVelNotY.y = 0;
+	if (glm::length(BallVelNotY) == 0 && Ball.bGrounded)
+		Debug::DrawLine(BallPos + glm::vec3(0,0.1f,0), glm::vec3(0,0.1f,0) + ClubPos + (BallPos - ClubPos) * 1.5f, 2.0f, {1,0,0,1}, {1,0,0,1});
 	this->Ball.HandlePhysics(DeltaSeconds);
+	std::cout << "Ball Velocity: " << glm::length(Ball.Velocity) << "\n";
+	std::cout << "Ball Position: x: " << Ball.Position.x << ", y: " << Ball.Position.y << ", z: " << Ball.Position.z << "\n";
 }
 
 void PlayerCamera::Draw()
 {
 	//std::cout << "x: " << Ball.Position.x << ", z: " << Ball.Position.z << std::endl;
 
-	Debug::DrawDebugText("HsjflksdajflkasdjflksadjlkfsjlkdfasjfksadjfsadjkfsIT", Ball.Position + glm::vec3(0,0.2,0), glm::vec4(1, 1, 1, 1));
 	Debug::DrawLine(Ball.Position, Ball.Position + glm::vec3(0, 0.2, 0), 1.0f, glm::vec4(1,0,1,1),glm::vec4(1,1,1,1));
 	if (glm::length(this->Ball.Velocity) < 0.05) {
 		this->Club.Draw();
@@ -290,22 +297,30 @@ void PlayerCamera::RenderOldScore(NVGcontext* vg) {
 std::vector<const char*> PlayerCamera::GetOldScore() {
 	std::vector<const char*> CharVec;
 	std::map<std::string, int> ScoreMap;
-	std::string MyText;
+
+	std::string Line;
 	std::ifstream MyFile("highscores.txt");
+
 	if (!MyFile.is_open()) {
 		return CharVec;
 	}
-	while (std::getline(MyFile, MyText)) {
-		std::istringstream iss(MyText);
-		std::string key;
-		int val;
 
-		if (!(iss >> key >> val)) {
-			std::cout << "iss Error" << std::endl;
-			continue;
-		}
+	std::vector<std::string> th;
 
-		ScoreMap[key] = val;
+	while (std::getline(MyFile, Line)) {
+		//std::istringstream iss(MyText);
+		//std::string key;
+		//int val;
+
+		//if (!(iss >> key >> val)) {
+			//AAA:835938
+			//std::cout << "iss Error" << std::endl;
+			//continue;
+		//}
+		std::string ScoreName = Line.substr(0, Name.size());
+		int Score = std::stoi(Line.substr(Name.length() + 1, Line.length() - 1));
+
+		//ScoreMap[key] = val;
 	}
 
 	MyFile.close();
@@ -318,6 +333,7 @@ std::vector<const char*> PlayerCamera::GetOldScore() {
 		OldScores.push_back(Combined);
 		CharVec.push_back(Combined.c_str());
 	}
+
 	return CharVec;
 }
 

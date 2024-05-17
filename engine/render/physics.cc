@@ -623,7 +623,7 @@ Raycast(glm::vec3 start, glm::vec3 dir, float maxDistance, uint16_t mask)
                 {
                     ret.hit = true;
                     ret.hitDistance = t;
-                    ret.hitNormal = N;
+                    ret.hitNormal = glm::mat3(glm::inverse(invT)) * N;
                     ret.collider = ColliderId::Create(colliderIndex, colliderPool.generations[colliderIndex]);
                 }
             }

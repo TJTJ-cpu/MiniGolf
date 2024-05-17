@@ -250,6 +250,7 @@ SpaceGameApp::Run()
     std::clock_t c_start = std::clock();
     double dt = 0.01667f;
 
+    bool DEBUGRealTimeUpdate = true;
 
     /// game loop
     while (this->window->IsOpen())
@@ -292,7 +293,16 @@ SpaceGameApp::Run()
         }
 
         //ship.Update(dt);
-        GodEye.Update(dt);
+        if (gamepad.Pressed[GolfInput::Gamepad::Button::X_BUTTON])
+            DEBUGRealTimeUpdate = !DEBUGRealTimeUpdate;
+
+        if (gamepad.Pressed[GolfInput::Gamepad::Button::Y_BUTTON] || DEBUGRealTimeUpdate)
+			GodEye.Update(dt);
+
+		//Debug::DrawBox(glm::translate(GodEye.Ball.Position + GodEye.Ball.Velocity * float(dt)) * glm::scale(glm::vec3(0.1f, 0.1f, 0.1f)), {1,1,1,1});
+        if (glm::length(GodEye.Ball.Velocity) > 0.1f)
+			Debug::DrawLine(GodEye.Ball.Position, GodEye.Ball.Position + glm::normalize(GodEye.Ball.Velocity) * (0.3f + glm::length(GodEye.Ball.Velocity * float(dt)) + GodEye.Ball.BallRadius), 2.0f, {0,1,0,1}, {0,1,0,1}, Debug::RenderMode::AlwaysOnTop);
+		/// LENGTH --> glm::length(Velocity * dt) + BallRadius
         GodEye.CheckCollisions();
         //ship.CheckCollisions();
 
@@ -336,7 +346,7 @@ SpaceGameApp::Run()
             GodEye.RenderScore(window->vg);
             GodEye.RenderOldScore(window->vg);
         }
-        //Physics::DebugDrawColliders();
+        Physics::DebugDrawColliders();
 
         //RenderDevice::Draw(ship.model, ship.transform);
 	

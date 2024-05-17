@@ -20,6 +20,7 @@ public:
 	float CurrGravity = 5.5f;
 	float FrictionForce = 0.9;
 	float BallRadius = 0.05;
+	bool bGrounded = false;
 
 	void Draw();
 	void Update(float dt);

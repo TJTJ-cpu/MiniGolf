@@ -42,7 +42,7 @@ void GolfBall::Update(float dt)
 	if (glm::length(Velocity) > 0) 
 		AddForce(Friction);
 
-	IsWallHit();
+	//IsWallHit();
 	IsGrounded();
 
 	Transform = glm::translate(Position);
@@ -52,7 +52,6 @@ bool GolfBall::IsGrounded()
 {
 	Physics::RaycastPayload HitResult;
 
-	bool bGrounded = false;
 
 	std::vector<glm::vec3> GroundedDirections = { glm::vec3(0,-1,0) };// , glm::vec3(0.33, -1, 0), glm::vec3(-0.33, -1, 0), glm::vec3(0, -1, 0.33), glm::vec3(0, -1, -0.33) };
 	for (auto Direction : GroundedDirections)
@@ -60,12 +59,15 @@ bool GolfBall::IsGrounded()
 		HitResult = Physics::Raycast(this->Position, Direction, BallRadius + 0.02f);
 		if (HitResult.hit)
 			bGrounded = true;
+		else
+			bGrounded = false;
 	}
-	if (!bGrounded) {
-		this->AddForce(glm::vec3(0, -CurrGravity, 0));
+	this->AddForce(glm::vec3(0, -CurrGravity, 0));
+	if (bGrounded) {
+		this->AddForce(glm::vec3(0, CurrGravity, 0));
 	}
 	else {
-		this->Velocity.y = 0.0f;
+		//this->Velocity.y = 0.0f;
 
 	}
 	//std::cout << std::boolalpha << bGrounded<< std::endl;
@@ -118,19 +120,30 @@ void GolfBall::HandlePhysics(float dt)
 {
 	//PrevPosition = Position;
 	Velocity += Acceleration * dt;
-	Position += Velocity * dt;
+	if (glm::length(Velocity) < 0.01f)
+		Velocity = { 0,0,0 };
+	//Position += Velocity * dt;
 
 	/// REFLECT VELOCITY IF WE ARE MOVING INTO OR THROUGH A WALL
-	//Physics::RaycastPayload NextHit;
-	//NextHit = Physics::Raycast(Position, Velocity, glm::length(Velocity * dt));
-	//if (NextHit.hit)
-	//{
-	//	float RemainingDistance = glm::length(Velocity * dt) - NextHit.hitDistance;
-	//	Velocity = Velocity - 2.0f * (glm::dot(Velocity, NextHit.hitNormal) * NextHit.hitNormal);
-	//	Position = NextHit.hitPoint + glm::normalize(Velocity) * BallRadius + glm::normalize(Velocity) * RemainingDistance;
-	//}
-	//else 
-	//	Position += Velocity * dt;
+	Physics::RaycastPayload NextHit;
+	NextHit = Physics::Raycast(Position, glm::normalize(Velocity), glm::length(Velocity * dt) + BallRadius);
+	std::cout << "Ray is of length: " << glm::length(Velocity * dt) + BallRadius << "\n";
+	if (NextHit.hit) {
+		glm::vec3 Normal; 
+		Normal = NextHit.hitNormal;
+		Normal = glm::normalize(Normal);
+		float RemainingDistance = glm::length(Velocity * dt) - NextHit.hitDistance;
+		std::cout << "x: " << Normal.x << ", y: " << Normal.y << ", z: " << Normal.z << "\n";
+		//Velocity = Velocity - 2.0f * (glm::dot(Velocity, Normal) * Normal);
+		Velocity = glm::reflect(Velocity, Normal) * 0.85f;
+		std::cout << "BEFORE PHYSICS: x: " << Position.x << ", y: " << Position.y << ", z: " << Position.z << "\n";
+		Position = NextHit.hitPoint + glm::normalize(Velocity) * BallRadius + glm::normalize(Velocity) * RemainingDistance;
+		std::cout << "AFTER PHYSICS: x: " << Position.x << ", y: " << Position.y << ", z: " << Position.z << "\n";
+	}
+	else 
+		Position += Velocity * dt;
+
+	Transform = glm::translate(Position);
 
 	Acceleration = glm::vec3(0,0,0);
 }
