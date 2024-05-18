@@ -83,15 +83,15 @@ void main()
 	int index = tileID.y * NumTiles.x + tileID.x;
 
     vec4 baseColor = texture(BaseColorTexture, in_TexCoords).rgba * BaseColorFactor;
-    baseColor = pow(baseColor, vec4(1.0f/2.2f));
-    vec3 normal = texture(NormalTexture, in_TexCoords).xyz;
+    //baseColor = pow(baseColor, vec4(1.0f/2.2f));
+    //vec3 normal = texture(NormalTexture, in_TexCoords).xyz;
 	vec2 metallicRoughness = texture(MetallicRoughnessTexture, in_TexCoords).xy;
 	vec3 emissive = texture(EmissiveTexture, in_TexCoords).xyz;
 	vec3 occlusion = texture(OcclusionTexture, in_TexCoords).xyz;
     
     vec3 V = normalize(CameraPosition.xyz - in_WorldSpacePos.xyz);
     vec3 binormal = cross(in_Normal, in_Tangent.xyz) * in_Tangent.w;
-    vec3 N = (CalcNormal(in_Tangent, binormal, in_Normal, normal.xyz));
+    vec3 N = in_Normal;//(CalcNormal(in_Tangent, binormal, in_Normal, normal.xyz));
 
     vec3 light = AmbientLight;
 
@@ -118,4 +118,6 @@ void main()
     }
 
     out_Color = vec4(light.rgb * baseColor.rgb + emissive, 1.0f);
+    //out_Color = vec4(N.xyz, 1);
+    //out_Color = vec4(baseColor.rgb, 1.0f);
 }

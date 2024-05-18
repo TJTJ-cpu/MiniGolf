@@ -220,10 +220,12 @@ TextureResource::LoadTextureFromMemory(TextureLoadInfo const& info)
 
             glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 
+	    std::cout << "Loaded " << img.w << "x" << img.h << " " << img.channels << "BPP texture from memory" << std::endl;
+
             if (img.channels == 3)
                 glTexImage2D(GL_TEXTURE_2D, 0, sRGB ? GL_RGB8 : GL_RGB8, img.w, img.h, 0, GL_RGB, GL_UNSIGNED_BYTE, img.data.get());
             else if (img.channels == 4)
-                glTexImage2D(GL_TEXTURE_2D, 0, sRGB ? GL_SRGB8_ALPHA8 : GL_RGBA8, img.w, img.h, 0, GL_RGBA, GL_UNSIGNED_BYTE, img.data.get());
+                glTexImage2D(GL_TEXTURE_2D, 0, sRGB ? GL_RGBA8 : GL_RGBA8, img.w, img.h, 0, GL_RGBA, GL_UNSIGNED_BYTE, img.data.get());
             
             glGenerateMipmap(GL_TEXTURE_2D);
 
@@ -281,11 +283,11 @@ TextureResource::LoadTexture(const char * path, MagFilter mag, MinFilter min, Wr
     // If there's no alpha channel, use RGB colors. else: use RGBA.
     if (n == 3)
     {
-        glTexImage2D(GL_TEXTURE_2D, 0, sRGB ? GL_SRGB : GL_RGB, w, h, 0, GL_RGB, GL_UNSIGNED_BYTE, image);
+        glTexImage2D(GL_TEXTURE_2D, 0, sRGB ? GL_RGB : GL_RGB, w, h, 0, GL_RGB, GL_UNSIGNED_BYTE, image);
     }
     else if (n == 4)
     {
-        glTexImage2D(GL_TEXTURE_2D, 0, sRGB ? GL_SRGB_ALPHA : GL_RGBA, w, h, 0, GL_RGBA, GL_UNSIGNED_BYTE, image);
+        glTexImage2D(GL_TEXTURE_2D, 0, sRGB ? GL_RGBA8 : GL_RGBA8, w, h, 0, GL_RGBA, GL_UNSIGNED_BYTE, image);
     }
 
     glGenerateMipmap(GL_TEXTURE_2D);
@@ -325,11 +327,11 @@ TextureResource::LoadTextureFromMemory(std::string name, void* buffer, uint64_t 
     // If there's no alpha channel, use RGB colors. else: use RGBA.
     if (channels == 3)
     {
-        glTexImage2D(GL_TEXTURE_2D, 0, sRGB ? GL_SRGB : GL_RGB, imageExtents.w, imageExtents.h, 0, GL_RGB, GL_UNSIGNED_BYTE, decompressed);
+        glTexImage2D(GL_TEXTURE_2D, 0, sRGB ? GL_RGB : GL_RGB, imageExtents.w, imageExtents.h, 0, GL_RGB, GL_UNSIGNED_BYTE, decompressed);
     }
     else if (channels == 4)
     {
-        glTexImage2D(GL_TEXTURE_2D, 0, sRGB ? GL_SRGB_ALPHA : GL_RGBA, imageExtents.w, imageExtents.h, 0, GL_RGBA, GL_UNSIGNED_BYTE, decompressed);
+        glTexImage2D(GL_TEXTURE_2D, 0, sRGB ? GL_RGBA8 : GL_RGBA, imageExtents.w, imageExtents.h, 0, GL_RGBA, GL_UNSIGNED_BYTE, decompressed);
     }
 
     stbi_image_free(decompressed);
