@@ -86,8 +86,8 @@ void PlayerCamera::Update(float DeltaSeconds)
 		/// MOVE THE GOLF CLUB WITH GAMEPAD LEFT STICK
 		if (!ThirdPersonCam)
 		{
-			Club.Position.x += DeltaSeconds * axes[1] * VerticleSpeed;
-			Club.Position.z += DeltaSeconds * axes[0] * VerticleSpeed;
+			Club.Position.x += DeltaSeconds * gamepad->LeftStick.y * VerticleSpeed;
+			Club.Position.z += DeltaSeconds * gamepad->LeftStick.x * VerticleSpeed;
 		}
 		float MaxDistance = 2;
 		if (Distance > MaxDistance) {
@@ -124,10 +124,10 @@ void PlayerCamera::Update(float DeltaSeconds)
 		OffSet = glm::vec3(0, 2, 0);
 
 		/// MOVE THE CAMERA WITH THE RIGHT STICK
-		Position.x += DeltaSeconds * axes[3] * MovementSpeed;
-		Position.z += DeltaSeconds * axes[2] * MovementSpeed;
+		Position.x += DeltaSeconds * gamepad->RightStick.y * MovementSpeed;
+		Position.z += DeltaSeconds * gamepad->RightStick.x * MovementSpeed;
 
-		if (axes[3] == 0 && axes[2] == 0) {
+		if (gamepad->RightStick.x == 0 && gamepad->RightStick.y == 0) {
 			Position = mix(Position, Ball.Position + OffSet, std::min(0.1f, DeltaSeconds * 30.0f));
 		}
 		else {
@@ -145,11 +145,11 @@ void PlayerCamera::Update(float DeltaSeconds)
 	{
 		glm::vec3 TargetPosition; 
 
-		OrbitPoint += DeltaSeconds * axes[2] * OrbitSpeed;
+		OrbitPoint += DeltaSeconds * gamepad->RightStick.x * OrbitSpeed;
 
 		/// GET INPUT IN THE FORM [0, 1]
-		float ZoomInAmount = ((axes[5] + 1) / 2);
-		float ZoomOutAmount = ((axes[4] + 1) / 2);
+		float ZoomInAmount = ((gamepad->RightTrigger + 1) / 2);
+		float ZoomOutAmount = ((gamepad->LeftTrigger + 1) / 2);
 
 		/// COOL WAY TO EXPRESS ZOOMING
 		OrbitDistance = std::min(MaxOrbitDistance, std::max(MinOrbitDistance, OrbitDistance + ZoomSpeed * (ZoomOutAmount - ZoomInAmount)));
@@ -177,8 +177,8 @@ void PlayerCamera::Update(float DeltaSeconds)
 
 		glm::vec3 ClubMovement = glm::vec3(0, 0, 0);
 
-		ClubMovement.x += DeltaSeconds * axes[0] * VerticleSpeed;
-		ClubMovement.z -= DeltaSeconds * axes[1] * VerticleSpeed;
+		ClubMovement.x += DeltaSeconds * gamepad->LeftStick.x * VerticleSpeed;
+		ClubMovement.z -= DeltaSeconds * gamepad->LeftStick.y * VerticleSpeed;
 
 
 		Club.Position += glm::vec3(glm::inverse(cam->view) * glm::vec4(ClubMovement, 0));

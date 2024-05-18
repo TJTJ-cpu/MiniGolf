@@ -9,6 +9,7 @@
 #include <sstream>
 #include "renderdevice.h"
 #include <iostream>
+#include <algorithm>
 
 namespace Render
 {
