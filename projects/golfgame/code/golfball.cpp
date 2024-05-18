@@ -120,25 +120,30 @@ void GolfBall::HandlePhysics(float dt)
 {
 	//PrevPosition = Position;
 	Velocity += Acceleration * dt;
+
 	if (glm::length(Velocity) < 0.01f)
 		Velocity = { 0,0,0 };
 	//Position += Velocity * dt;
 
+	/// VARIABLES FOR REFLECTING
+	glm::vec3 CurrentPosition = Position;
+	glm::vec3 TargetPosition = Position + Velocity * dt;
+
 	/// REFLECT VELOCITY IF WE ARE MOVING INTO OR THROUGH A WALL
 	Physics::RaycastPayload NextHit;
 	NextHit = Physics::Raycast(Position, glm::normalize(Velocity), glm::length(Velocity * dt) + BallRadius);
-	std::cout << "Ray is of length: " << glm::length(Velocity * dt) + BallRadius << "\n";
 	if (NextHit.hit) {
-		glm::vec3 Normal; 
-		Normal = NextHit.hitNormal;
-		Normal = glm::normalize(Normal);
-		float RemainingDistance = glm::length(Velocity * dt) - NextHit.hitDistance;
-		std::cout << "x: " << Normal.x << ", y: " << Normal.y << ", z: " << Normal.z << "\n";
-		//Velocity = Velocity - 2.0f * (glm::dot(Velocity, Normal) * Normal);
-		Velocity = glm::reflect(Velocity, Normal) * 0.85f;
-		std::cout << "BEFORE PHYSICS: x: " << Position.x << ", y: " << Position.y << ", z: " << Position.z << "\n";
-		Position = NextHit.hitPoint + glm::normalize(Velocity) * BallRadius + glm::normalize(Velocity) * RemainingDistance;
-		std::cout << "AFTER PHYSICS: x: " << Position.x << ", y: " << Position.y << ", z: " << Position.z << "\n";
+		do
+		{
+			glm::vec3 Normal = glm::normalize(NextHit.hitNormal);
+			float RemainingDistance = glm::length(Velocity * dt) - NextHit.hitDistance;
+			Velocity = glm::reflect(Velocity, Normal) * 0.85f;
+			TargetPosition = NextHit.hitPoint + glm::normalize(Velocity) * BallRadius + glm::normalize(Velocity) * RemainingDistance;
+			NextHit = Physics::Raycast(CurrentPosition + Normal * BallRadius, glm::normalize(Velocity), glm::length(Velocity * dt) + BallRadius);
+			CurrentPosition = TargetPosition;
+		} while (NextHit.hit);
+
+		Position = TargetPosition;
 	}
 	else 
 		Position += Velocity * dt;
