@@ -236,19 +236,38 @@ void PlayerCamera::WriteScoreToFile(std::string MapName) {
 }
 
 void PlayerCamera::RenderHighScore(NVGcontext* vg) {
+	/// BOX BEHIND TEXT
+    nvgBeginPath(vg);
+	nvgRect(vg, 550, 300, 400, 200);
+    NVGpaint paint;
+    paint = nvgLinearGradient(vg, 600, 100, 650, 150, nvgRGBA(0, 0, 0, 200), nvgRGBA(0, 0, 0, 200));
+    nvgFillPaint(vg, paint);
+    nvgFill(vg);
+
     nvgFontSize(vg, 56.0f);
     nvgFontFace(vg, "sans");
-    nvgFillColor(vg, nvgRGBA(255, 255, 255, 128));
-	const char* CName = Name.c_str();
-	std::string Hat = "     ";
-	Hat[currentNameIndex * 2] = '^';
-	const char* cHat = Hat.c_str();
-    nvgText(vg, 600, 380, "YOU WIN!!!!", NULL);
-    nvgText(vg, 600, 430, CName, NULL);
-    nvgText(vg, 600, 480, cHat, NULL);
+
+	nvgFillColor(vg, nvgRGBA(255, 255, 255, 128));
+    nvgText(vg, 600, 380, "Enter Name: ", NULL);
+
+	for (int i = 0; i < Name.length(); i++)
+	{
+		nvgFillColor(vg, nvgRGBA(255, 255, 255, 128));
+		if (currentNameIndex == i)
+			nvgFillColor(vg, nvgRGBA(255, 0, 0, 128));
+		nvgText(vg, 675 + 50 * i, 450, Name.substr(i,1).c_str(), NULL);
+	}
 }
 
 void PlayerCamera::RenderScore(NVGcontext* vg) {
+	/// BOX BEHIND TEXT
+    nvgBeginPath(vg);
+	nvgRect(vg, 40, 10, 300, 150);
+    NVGpaint paint;
+    paint = nvgLinearGradient(vg, 600, 100, 650, 150, nvgRGBA(0, 0, 0, 100), nvgRGBA(0, 0, 0, 100));
+    nvgFillPaint(vg, paint);
+    nvgFill(vg);
+
     nvgFontSize(vg, 56.0f);
     nvgFontFace(vg, "sans");
     nvgFillColor(vg, nvgRGBA(255, 255, 255, 128));
@@ -259,6 +278,13 @@ void PlayerCamera::RenderScore(NVGcontext* vg) {
 }
 
 void PlayerCamera::RenderOldScore(NVGcontext* vg) {
+    nvgBeginPath(vg);
+	nvgRect(vg, 50, 250, 400, (OldScores.size() + 1) * 50 + 10);
+    NVGpaint paint;
+    paint = nvgLinearGradient(vg, 600, 100, 650, 150, nvgRGBA(0, 0, 0, 100), nvgRGBA(0, 0, 0, 100));
+    nvgFillPaint(vg, paint);
+    nvgFill(vg);
+
     nvgFontSize(vg, 56.0f);
     nvgFontFace(vg, "sans");
     nvgFillColor(vg, nvgRGBA(255, 255, 255, 128));
