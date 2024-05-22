@@ -58,25 +58,27 @@ namespace GolfInput
 
 #ifdef __linux__
 			LeftStick = glm::vec2(axes[0], -axes[1]);
-#elif _WIN32
-			LeftStick = glm::vec2(axes[0], axes[1]);
-#endif
 			if (glm::length(LeftStick) < 0.1f)
 				LeftStick = {0,0};
-#ifdef __linux__
+
 			RightStick = glm::vec2(axes[3], -axes[4]);
-#elif _WIN32
-			RightStick = glm::vec2(axes[2], axes[3]);
-#endif
 			if (glm::length(RightStick) < 0.1f)
 				RightStick = {0,0};
 
-#ifdef __linux__
 			LeftTrigger = axes[2];
-#elif _WIN32
-			LeftTrigger = axes[4];
-#endif
 			RightTrigger = axes[5];
+#elif _WIN32
+			LeftStick = glm::vec2(axes[0], axes[1]);
+			if (glm::length(LeftStick) < 0.1f)
+				LeftStick = {0,0};
+
+			RightStick = glm::vec2(axes[2], axes[3]);
+			if (glm::length(RightStick) < 0.1f)
+				RightStick = {0,0};
+
+			LeftTrigger = axes[4];
+			RightTrigger = axes[5];
+#endif
 		}
 	};
 }
