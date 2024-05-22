@@ -123,8 +123,13 @@ SpaceGameApp::Run()
 									3,3,0 };
     TileManager Tile;
     TileManager Tile2;
-    Tile.SpawnMap(Four, Map1, Map1Rotations, glm::vec3(2, 1, 0));
-    Tile2.SpawnMap(Three, Map, Rotations, glm::vec3(1,1,1));
+
+    Tile.SpawnMap("TJ's Map", Four, Map1, Map1Rotations, glm::vec3(2, 1, 0));
+    Tile2.SpawnMap("Square", Three, Map, Rotations, glm::vec3(1, 1, 1));
+
+    MapManager mapManager;
+    mapManager.RegisterMap(Tile);
+    mapManager.RegisterMap(Tile2);
     
     /// MOVES THE UNRELATED SHIT OUTTA THE WAY
     for (auto& tile : Tile2.PlatformTiles)
@@ -155,14 +160,14 @@ SpaceGameApp::Run()
         LoadModel("assets/golf/ball-red.glb"),
         LoadModel("assets/golf/ball-green.glb")
     };
-    Physics::ColliderMeshId colliderMeshes[6] = {
-        Physics::LoadColliderMesh("assets/space/Asteroid_1_physics.glb"),
-        Physics::LoadColliderMesh("assets/space/Asteroid_2_physics.glb"),
-        Physics::LoadColliderMesh("assets/space/Asteroid_3_physics.glb"),
-        Physics::LoadColliderMesh("assets/space/Asteroid_4_physics.glb"),
-        Physics::LoadColliderMesh("assets/space/Asteroid_5_physics.glb"),
-        Physics::LoadColliderMesh("assets/space/Asteroid_6_physics.glb")
-    };
+    //Physics::ColliderMeshId colliderMeshes[6] = {
+    //    Physics::LoadColliderMesh("assets/space/Asteroid_1_physics.glb"),
+    //    Physics::LoadColliderMesh("assets/space/Asteroid_2_physics.glb"),
+    //    Physics::LoadColliderMesh("assets/space/Asteroid_3_physics.glb"),
+    //    Physics::LoadColliderMesh("assets/space/Asteroid_4_physics.glb"),
+    //    Physics::LoadColliderMesh("assets/space/Asteroid_5_physics.glb"),
+    //    Physics::LoadColliderMesh("assets/space/Asteroid_6_physics.glb")
+    //};
 
     std::vector<std::tuple<ModelId, Physics::ColliderId, glm::mat4>> asteroids;
     
@@ -204,7 +209,7 @@ SpaceGameApp::Run()
         glm::vec3 rotationAxis = normalize(translation);
         float rotation = translation.x;
         glm::mat4 transform = glm::rotate(rotation, rotationAxis) * glm::translate(translation);
-        std::get<1>(asteroid) = Physics::CreateCollider(colliderMeshes[resourceIndex], transform);
+        //std::get<1>(asteroid) = Physics::CreateCollider(colliderMeshes[resourceIndex], transform);
         std::get<2>(asteroid) = transform;
         asteroids.push_back(asteroid);
     }
@@ -219,6 +224,7 @@ SpaceGameApp::Run()
         "assets/space/bg.png",
         "assets/space/bg.png"
     };
+
     TextureResourceId skyboxId = TextureResource::LoadCubemap("skybox", skybox, true);
     RenderDevice::SetSkybox(skyboxId);
     
@@ -252,11 +258,15 @@ SpaceGameApp::Run()
 
     bool DEBUGRealTimeUpdate = true;
 
+    /// Collect the old scores from file
+	GodEye.OldScores = GodEye.GetOldScore(AllMaps[CurrentMap].Name);
+
     /// game loop
     while (this->window->IsOpen())
 	{
         gamepad.Update();
 
+        /// THIS SHOULD PROBABLY BE MOVE TO THE PLAYER CAMERA; SOME SORT OF HANDLE INPUT METHOD MAYBE??
         if (gamepad.Pressed[GolfInput::Gamepad::Button::SELECT]) {
             GodEye.CurrentTime = 0;
             for (auto &tile : AllMaps[CurrentMap].PlatformTiles) {
@@ -273,10 +283,12 @@ SpaceGameApp::Run()
             for (auto &tile : AllMaps[CurrentMap].PlatformTiles) {
                 Physics::SetTransform(tile.Collider, tile.Transform);
             }
+
             GodEye.IsGameWon = false;
             GodEye.Score = 0;
             GodEye.Club.bIsMovingTowardBall = false;
             GodEye.bStartGame = true;
+			GodEye.OldScores = GodEye.GetOldScore(AllMaps[CurrentMap].Name);
         }
 
         auto timeStart = std::chrono::steady_clock::now();
@@ -297,11 +309,23 @@ SpaceGameApp::Run()
             DEBUGRealTimeUpdate = !DEBUGRealTimeUpdate;
 
         if (gamepad.Pressed[GolfInput::Gamepad::Button::Y_BUTTON] || DEBUGRealTimeUpdate)
-			GodEye.Update(dt);
+            GodEye.Update(dt);
+        else
+        {
+            if (gamepad.Pressed[GolfInput::Gamepad::Button::RIGHT_SHOULDER_BUTTON])
+            {
+                if (GodEye.HandleClubAndCameraInput == &PlayerCamera::UpdateCameraThirdPerson)
+                    GodEye.HandleClubAndCameraInput = &PlayerCamera::UpdateCameraTopDown;
+                else
+                    GodEye.HandleClubAndCameraInput = &PlayerCamera::UpdateCameraThirdPerson;
+            }
+			(GodEye.*GodEye.HandleClubAndCameraInput)(dt);
+        }
 
 		//Debug::DrawBox(glm::translate(GodEye.Ball.Position + GodEye.Ball.Velocity * float(dt)) * glm::scale(glm::vec3(0.1f, 0.1f, 0.1f)), {1,1,1,1});
         if (glm::length(GodEye.Ball.Velocity) > 0.1f)
 			Debug::DrawLine(GodEye.Ball.Position, GodEye.Ball.Position + glm::normalize(GodEye.Ball.Velocity) * (0.3f + glm::length(GodEye.Ball.Velocity * float(dt)) + GodEye.Ball.BallRadius), 2.0f, {0,1,0,1}, {0,1,0,1}, Debug::RenderMode::AlwaysOnTop);
+
 		/// LENGTH --> glm::length(Velocity * dt) + BallRadius
         GodEye.CheckCollisions();
         //ship.CheckCollisions();
@@ -317,7 +341,7 @@ SpaceGameApp::Run()
 
         if (GodEye.bStartGame) {
             std::cout << "Once " << std::endl;
-            GodEye.GetOldScore();
+            GodEye.GetOldScore(AllMaps[CurrentMap].Name);
             GodEye.bStartGame = false;
         }
         
@@ -326,6 +350,7 @@ SpaceGameApp::Run()
         char CurrentTile = AllMaps[CurrentMap].SearchWhereAmI(GodEye.Ball.Position.x, GodEye.Ball.Position.z);
         if (CurrentTile == 'h' || CurrentTile == 'H') {
 			GodEye.Ball.CurrGravity = GodEye.HighGravity;
+
             /// WIN CONDITION
             if (GodEye.Ball.HeightOfTheLastFrameOfTheBall > GodEye.Ball.Position.y && !GodEye.IsGameWon) {
                 GodEye.IsGameWon = true;
@@ -335,20 +360,18 @@ SpaceGameApp::Run()
 			GodEye.Ball.CurrGravity = GodEye.LowGravity;
 
         GodEye.Ball.HeightOfTheLastFrameOfTheBall = GodEye.Ball.Position.y;
-        std::vector<const char*> temp;
-        temp = GodEye.GetOldScore();
+        std::vector<std::string> temp;
 
         if (GodEye.IsGameWon) {
-			GodEye.EnterHighScoreName();
+			GodEye.EnterHighScoreName(AllMaps[CurrentMap].Name);
 			GodEye.RenderHighScore(window->vg);
         }
         else {
             GodEye.RenderScore(window->vg);
             GodEye.RenderOldScore(window->vg);
         }
-        Physics::DebugDrawColliders();
 
-        //RenderDevice::Draw(ship.model, ship.transform);
+        // Physics::DebugDrawColliders();
 	
         // Execute the entire rendering pipeline
         RenderDevice::Render(this->window, dt);

@@ -23,42 +23,18 @@ PlayerCamera::PlayerCamera(GolfInput::Gamepad* gm, glm::vec3 pos, glm::vec3 offs
 	Position = OffSet;
 	Ball = GolfBall(pos, "assets/golf/ball-blue.glb");
 	Club = GolfClub(pos + glm::vec3(0, 0.7, -1), "assets/golf/club-blue.glb", 4);
-
-	float minX, minY, maxX, maxY;
 }
 
 void PlayerCamera::Update(float DeltaSeconds)
 {
 	CurrentTime += DeltaSeconds;
+
 	Ball.Update(DeltaSeconds);
-	this->Club.Position.y = this->Ball.Position.y + 0.7f;
+
+	float ClubBallHeightOffset = 0.7f;
+	Club.Position.y = Ball.Position.y + ClubBallHeightOffset;
 
 	Render::Camera* cam = Render::CameraManager::GetCamera(CAMERA_MAIN);
-	Input::Keyboard* kbd = Input::GetDefaultKeyboard();
-
-	if (kbd->held[Input::Key::W])
-		Position.x += DeltaSeconds * MovementSpeed;
-
-	if (kbd->held[Input::Key::S])
-		Position.x -= DeltaSeconds * MovementSpeed;
-
-	if (kbd->held[Input::Key::E])
-		Position.y += DeltaSeconds * VerticleSpeed;
-
-	if (kbd->held[Input::Key::Q])
-		Position.y -= DeltaSeconds * VerticleSpeed;
-
-	if (kbd->held[Input::Key::D])
-		Position.z += DeltaSeconds * MovementSpeed;
-
-	if (kbd->held[Input::Key::A])
-		Position.z -= DeltaSeconds * MovementSpeed;
-
-	/// GAMEPAD
-	int count;
-	const float* axes = glfwGetJoystickAxes(GLFW_JOYSTICK_1, &count);
-	const unsigned char* Hit = glfwGetJoystickButtons(GLFW_JOYSTICK_1, &count);
-
 
 	/// DECLARE THIS SOMEWHERE ELSE LATER
 	glm::vec3 BallPos = Ball.Position;
@@ -67,7 +43,6 @@ void PlayerCamera::Update(float DeltaSeconds)
 	ClubPos.y = 0;
 
 	/// IF THE ACTION BUTTON IS PRESSED GO TOWARDS TO BALL
-	//if (Hit[0] == GLFW_PRESS && !Club.bIsMovingTowardBall && (glm::length(Ball.Velocity) < 0.1) && CurrentTime > 1.0f) {
 	if (gamepad->Pressed[GolfInput::Gamepad::Button::A_BUTTON] && !Club.bIsMovingTowardBall && (glm::length(Ball.Velocity) < 0.1)) {
 		Club.bIsMovingTowardBall = true;
 		DistanceFromClubToTheGolfBall = glm::distance(this->Ball.Position, this->Club.Position);
@@ -76,34 +51,16 @@ void PlayerCamera::Update(float DeltaSeconds)
 
 	/// SWITCH CAMERA PERSPECTIVE
 	if (gamepad->Pressed[GolfInput::Gamepad::Button::RIGHT_SHOULDER_BUTTON]) {
-		ThirdPersonCam = !ThirdPersonCam;
+		if (HandleClubAndCameraInput == &PlayerCamera::UpdateCameraThirdPerson)
+			HandleClubAndCameraInput = &PlayerCamera::UpdateCameraTopDown;
+		else
+			HandleClubAndCameraInput = &PlayerCamera::UpdateCameraThirdPerson;
 		OrbitPoint = 0;
 	}
 
-	if (!Club.bIsMovingTowardBall) {
-		float Distance = glm::distance(BallPos, ClubPos);
-
-		/// MOVE THE GOLF CLUB WITH GAMEPAD LEFT STICK
-		if (!ThirdPersonCam)
-		{
-			Club.Position.x += DeltaSeconds * gamepad->LeftStick.y * VerticleSpeed;
-			Club.Position.z += DeltaSeconds * gamepad->LeftStick.x * VerticleSpeed;
-		}
-		float MaxDistance = 2;
-		if (Distance > MaxDistance) {
-			glm::vec3 norm = glm::normalize((ClubPos - BallPos));
-			norm *= MaxDistance - 0.01;
-			Club.Position = Ball.Position + norm;
-			Club.Position.y += 0.7f;
-		}
-		/// ROTATE THE CLUB TO POINT AT THE BALL
-		Club.Rotation = glm::inverse(glm::lookAt(ClubPos, BallPos, glm::vec3(0, 1, 0))) * glm::rotate(3.141592f / 2, glm::vec3(0, 1, 0));
-	}
-	else {
+	if (Club.bIsMovingTowardBall) {
 		glm::vec3 norm = glm::normalize(BallPos - ClubPos);
-		//BallHitDirection = norm;
 		if (glm::distance(ClubPos, BallPos) > 0.1f) {
-			// Club moving toward the ball
 			Club.Position += norm * ClubMovementSpeed * DeltaSeconds;
 			ClubPos = Club.Position;
 			ClubPos.y = 0;
@@ -112,100 +69,51 @@ void PlayerCamera::Update(float DeltaSeconds)
 			this->Ball.AddForce(BallHitDirection * 75.3f * (DistanceFromClubToTheGolfBall * DistanceFromClubToTheGolfBall));
 			Club.bIsMovingTowardBall = false;
 			Score++;
-			std::cout << Score << std::endl;
 		}
 	}
 
+	/// A COMMAND PATTERN STYLE; HOPEFULLY PREFERABLE TO AN IF-ELSE
+	(this->*HandleClubAndCameraInput)(DeltaSeconds);
+
+	/// KEEP CLUB IN RANGE
+	if (!Club.bIsMovingTowardBall) {
+		float Distance = glm::distance(BallPos, ClubPos);
+
+		float MaxDistance = 2;
+		if (Distance > MaxDistance) {
+			glm::vec3 norm = glm::normalize((ClubPos - BallPos));
+			norm *= MaxDistance - 0.01;
+			Club.Position = Ball.Position + norm;
+			Club.Position.y += ClubBallHeightOffset;
+		}
+	}
+
+	Club.Rotation = glm::inverse(glm::lookAt(ClubPos, BallPos, glm::vec3(0, 1, 0))) * glm::rotate(3.141592f / 2, glm::vec3(0, 1, 0));
 	Club.Transform = glm::translate(Club.Position) * (glm::mat4)Club.Rotation;
-	//OffSet.y += DeltaSeconds * -axes[1] * VerticleSpeed;
-
-	if (!ThirdPersonCam)
-	{
-		OffSet = glm::vec3(0, 2, 0);
-
-		/// MOVE THE CAMERA WITH THE RIGHT STICK
-		Position.x += DeltaSeconds * gamepad->RightStick.y * MovementSpeed;
-		Position.z += DeltaSeconds * gamepad->RightStick.x * MovementSpeed;
-
-		if (gamepad->RightStick.x == 0 && gamepad->RightStick.y == 0) {
-			Position = mix(Position, Ball.Position + OffSet, std::min(0.1f, DeltaSeconds * 30.0f));
-		}
-		else {
-			float CameraMoveableRadius = 2;
-			if (glm::length(Position - (Ball.Position + OffSet)) > CameraMoveableRadius) {
-				glm::vec3 norm = glm::normalize((Position - (Ball.Position + OffSet)));
-				norm.y = 0;
-				norm *= CameraMoveableRadius;
-				Position = Ball.Position + OffSet + norm;
-			}
-		}
-		cam->view = glm::lookAt(Position, Position + glm::vec3(0, -1, 0), glm::vec3(1, 0, 0));
-	}
-	else
-	{
-		glm::vec3 TargetPosition; 
-
-		OrbitPoint += DeltaSeconds * gamepad->RightStick.x * OrbitSpeed;
-
-		/// GET INPUT IN THE FORM [0, 1]
-		float ZoomInAmount = ((gamepad->RightTrigger + 1) / 2);
-		float ZoomOutAmount = ((gamepad->LeftTrigger + 1) / 2);
-
-		/// COOL WAY TO EXPRESS ZOOMING
-		OrbitDistance = std::min(MaxOrbitDistance, std::max(MinOrbitDistance, OrbitDistance + ZoomSpeed * (ZoomOutAmount - ZoomInAmount)));
-
-		/// BORING WAY
-		//if (OrbitDistance < 5)
-			//OrbitDistance += ZoomSpeed * ZoomOutAmount;
-		//if (OrbitDistance > 1)
-			//OrbitDistance -= ZoomSpeed * ZoomInAmount;
-
-		OffSet = glm::vec3(0, OrbitDistance/2, 0);
-
-		TargetPosition = Ball.Position + OffSet;
-		TargetPosition.x -= glm::cos(OrbitPoint) * OrbitDistance;
-		TargetPosition.z -= glm::sin(OrbitPoint) * OrbitDistance;
-
-		Position = mix(Position, TargetPosition, std::min(0.1f, DeltaSeconds * 30.0f));
-
-		cam->view = glm::lookAt(Position, Ball.Position, glm::vec3(0, 1, 0));
-
-		/// PROJECTION EXAMPLE
-		// glm::vec3 A;
-		// glm::vec3 B;
-		// glm::vec3 ProjAOnB = (glm::dot(A, B) / glm::length(B)) * B;
-
-		glm::vec3 ClubMovement = glm::vec3(0, 0, 0);
-
-		ClubMovement.x += DeltaSeconds * gamepad->LeftStick.x * VerticleSpeed;
-		ClubMovement.z -= DeltaSeconds * gamepad->LeftStick.y * VerticleSpeed;
-
-
-		Club.Position += glm::vec3(glm::inverse(cam->view) * glm::vec4(ClubMovement, 0));
-
-	}
 
 	/// Guided Predictive Line
 	glm::vec3 BallVelNotY = Ball.Velocity;
 	BallVelNotY.y = 0;
 	if (glm::length(BallVelNotY) == 0 && Ball.bGrounded)
 		Debug::DrawLine(BallPos + glm::vec3(0,0.1f,0), glm::vec3(0,0.1f,0) + ClubPos + (BallPos - ClubPos) * 1.5f, 2.0f, {1,0,0,1}, {1,0,0,1});
+
 	this->Ball.HandlePhysics(DeltaSeconds);
-	std::cout << "Ball Velocity: " << glm::length(Ball.Velocity) << "\n";
-	std::cout << "Ball Position: x: " << Ball.Position.x << ", y: " << Ball.Position.y << ", z: " << Ball.Position.z << "\n";
+	//std::cout << "Ball grounded: " << std::boolalpha << Ball.bGrounded << "\n";
+	//std::cout << "Ball Velocity: " << glm::length(Ball.Velocity) << "\n";
+	//std::cout << "Ball Position: x: " << Ball.Position.x << ", y: " << Ball.Position.y << ", z: " << Ball.Position.z << "\n";
 }
 
 void PlayerCamera::Draw()
 {
-	//std::cout << "x: " << Ball.Position.x << ", z: " << Ball.Position.z << std::endl;
-
 	Debug::DrawLine(Ball.Position, Ball.Position + glm::vec3(0, 0.2, 0), 1.0f, glm::vec4(1,0,1,1),glm::vec4(1,1,1,1));
-	if (glm::length(this->Ball.Velocity) < 0.05) {
+
+	if (Ball.bGrounded && glm::length(this->Ball.Velocity) < 0.05) {
 		this->Club.Draw();
 	}
 	else {
 		this->Club.Position = this->Ball.Position + glm::vec3(0, 0, -1);
 	}
+
 	this->Ball.Draw();
 }
 
@@ -219,7 +127,79 @@ void PlayerCamera::CheckCollisions()
 
 }
 
-void PlayerCamera::EnterHighScoreName() {
+void PlayerCamera::UpdateCameraThirdPerson(float dt)
+{
+	Render::Camera* cam = Render::CameraManager::GetCamera(CAMERA_MAIN);
+
+	glm::vec3 TargetPosition; 
+
+	OrbitPoint += dt * gamepad->RightStick.x * OrbitSpeed;
+
+	/// GET INPUT IN THE FORM [0, 1]
+	float ZoomInAmount = ((gamepad->RightTrigger + 1) / 2);
+	float ZoomOutAmount = ((gamepad->LeftTrigger + 1) / 2);
+
+	/// COOL WAY TO EXPRESS ZOOMING
+	OrbitDistance = std::min(MaxOrbitDistance, std::max(MinOrbitDistance, OrbitDistance + ZoomSpeed * (ZoomOutAmount - ZoomInAmount)));
+
+	/// BORING WAY
+	//if (OrbitDistance < 5)
+		//OrbitDistance += ZoomSpeed * ZoomOutAmount;
+	//if (OrbitDistance > 1)
+		//OrbitDistance -= ZoomSpeed * ZoomInAmount;
+
+	OffSet = glm::vec3(0, OrbitDistance/2, 0);
+
+	TargetPosition = Ball.Position + OffSet;
+	TargetPosition.x -= glm::cos(OrbitPoint) * OrbitDistance;
+	TargetPosition.z -= glm::sin(OrbitPoint) * OrbitDistance;
+
+	Position = mix(Position, TargetPosition, std::min(0.1f, dt * 30.0f));
+
+	cam->view = glm::lookAt(Position, Ball.Position, glm::vec3(0, 1, 0));
+
+	glm::vec3 ClubMovement = glm::vec3(0, 0, 0);
+
+	ClubMovement.x += dt * gamepad->LeftStick.x * VerticleSpeed;
+	ClubMovement.z -= dt * gamepad->LeftStick.y * VerticleSpeed;
+
+
+	Club.Position += glm::vec3(glm::inverse(cam->view) * glm::vec4(ClubMovement, 0));
+}
+
+void PlayerCamera::UpdateCameraTopDown(float dt)
+{
+	Render::Camera* cam = Render::CameraManager::GetCamera(CAMERA_MAIN);
+
+	OffSet = glm::vec3(0, 2, 0);
+
+	/// MOVE THE CAMERA WITH THE RIGHT STICK
+	Position.x += dt * gamepad->RightStick.y * MovementSpeed;
+	Position.z += dt * gamepad->RightStick.x * MovementSpeed;
+
+	/// MOVE THE GOLF CLUB WITH GAMEPAD LEFT STICK
+	if (!Club.bIsMovingTowardBall)
+	{
+		Club.Position.x += dt * gamepad->LeftStick.y * VerticleSpeed;
+		Club.Position.z += dt * gamepad->LeftStick.x * VerticleSpeed;
+	}
+
+	if (gamepad->RightStick.x == 0 && gamepad->RightStick.y == 0) {
+		Position = mix(Position, Ball.Position + OffSet, std::min(0.1f, dt * 30.0f));
+	}
+	else {
+		float CameraMoveableRadius = 2;
+		if (glm::length(Position - (Ball.Position + OffSet)) > CameraMoveableRadius) {
+			glm::vec3 norm = glm::normalize((Position - (Ball.Position + OffSet)));
+			norm.y = 0;
+			norm *= CameraMoveableRadius;
+			Position = Ball.Position + OffSet + norm;
+		}
+	}
+	cam->view = glm::lookAt(Position, Position + glm::vec3(0, -1, 0), glm::vec3(1, 0, 0));
+}
+
+void PlayerCamera::EnterHighScoreName(std::string MapName) {
 	if (gamepad->Pressed[GolfInput::Gamepad::Button::DPAD_DOWN]) {
 		Name[currentNameIndex]++;
 		if (Name[currentNameIndex] > 'Z')
@@ -241,7 +221,7 @@ void PlayerCamera::EnterHighScoreName() {
 			currentNameIndex = Name.length() - 1;
 	}
 	else if (gamepad->Pressed[GolfInput::Gamepad::Button::A_BUTTON]) {
-		WriteScoreToFile();
+		WriteScoreToFile(MapName);
 		IsGameWon = false;
 		Score = 0;
 		Name = "AAA";
@@ -249,8 +229,8 @@ void PlayerCamera::EnterHighScoreName() {
 	}
 }
 
-void PlayerCamera::WriteScoreToFile() {
-	std::ofstream ScoreFile("highscores.txt", std::ios::app);
+void PlayerCamera::WriteScoreToFile(std::string MapName) {
+	std::ofstream ScoreFile(MapName + "_highscores.txt", std::ios::app);
 	ScoreFile << Name << " " << Score << "\n";
 	ScoreFile.close();
 }
@@ -294,62 +274,44 @@ void PlayerCamera::RenderOldScore(NVGcontext* vg) {
 
 }
 
-std::vector<const char*> PlayerCamera::GetOldScore() {
-	std::vector<const char*> CharVec;
-	std::map<std::string, int> ScoreMap;
+std::vector<std::string> PlayerCamera::GetOldScore(std::string MapName) {
+	std::vector<std::string> Scores;
 
 	std::string Line;
-	std::ifstream MyFile("highscores.txt");
+	std::ifstream MyFile(MapName + "_highscores.txt");
 
 	if (!MyFile.is_open()) {
-		return CharVec;
+		return Scores;
 	}
 
-	std::vector<std::string> th;
+	std::vector<std::string> HighscoreName;
+	std::vector<int> Highscore;
 
 	while (std::getline(MyFile, Line)) {
-		//std::istringstream iss(MyText);
-		//std::string key;
-		//int val;
-
-		//if (!(iss >> key >> val)) {
-			//AAA:835938
-			//std::cout << "iss Error" << std::endl;
-			//continue;
-		//}
 		std::string ScoreName = Line.substr(0, Name.size());
 		int Score = std::stoi(Line.substr(Name.length() + 1, Line.length() - 1));
 
-		//ScoreMap[key] = val;
+		int insertPoint = 0;
+		while (insertPoint < Highscore.size() && Highscore[insertPoint] < Score)
+			insertPoint++;
+
+		/// INSERT THE SCORES AT THE PROPER POINT IN THE LISTS
+		Highscore.insert(Highscore.begin() + insertPoint, Score);
+		HighscoreName.insert(HighscoreName.begin() + insertPoint, ScoreName);
 	}
 
 	MyFile.close();
 
-	/// Find a way to sort the algorithm
-	//std::multimap<std::string, int>dst = flip_map(ScoreMap);
-
-	for (auto pair : ScoreMap) {
-		std::string Combined = pair.first + " " + std::to_string(pair.second);
-		OldScores.push_back(Combined);
-		CharVec.push_back(Combined.c_str());
+	/// TAKES THOSE TWO LISTS WE HAD EARLIER AND MERGE THEM AND PUT THEM IN A NEW LIST AS C STYLE STRINGS
+	for (int i = 0; i < HighscoreName.size(); i++)
+	{
+		Scores.push_back(std::to_string(i + 1) + ". " + HighscoreName[i] + "......" + std::to_string(Highscore[i]));
+		if (Scores.size() == 7)
+			break;
 	}
 
-	return CharVec;
-}
+	for (auto score : Scores)
+		std::cout << score << "\n";
 
-
-//https://stackoverflow.com/questions/5056645/sorting-stdmap-using-value
-template<typename A, typename B>
-std::pair<B, A> flip_pair(const std::pair<A, B>& p)
-{
-	return std::pair<B, A>(p.second, p.first);
-}
-
-template<typename A, typename B>
-std::multimap<B, A> flip_map(const std::map<A, B>& src)
-{
-	std::multimap<B, A> dst;
-	std::transform(src.begin(), src.end(), std::inserter(dst, dst.begin()),
-		flip_pair<A, B>);
-	return dst;
+	return Scores;
 }

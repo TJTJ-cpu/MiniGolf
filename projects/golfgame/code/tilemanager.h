@@ -3,6 +3,7 @@
 #include "render/model.h"
 #include "config.h"
 #include <tuple>
+#include <string>
 
 struct MyTile
 {
@@ -19,12 +20,15 @@ public:
 	std::string tMap;
 	int tWidth;
 	glm::vec3 BallSpawn;
+	std::string Name;
 
-	void SpawnMap(int width, std::string Map, std::vector<int> Rotations, glm::vec3 Spawn)
+	void SpawnMap(std::string MapName, int width, std::string Map, std::vector<int> Rotations, glm::vec3 Spawn)
 	{
+		Name = MapName;
 		tMap = Map;
 		tWidth = width;
 		BallSpawn = Spawn;
+
 		Render::ModelId Flag = Render::LoadModel("assets/golf/flag-red.glb");
 		Render::ModelId HoleOpen = Render::LoadModel("assets/golf/hole-open.glb");
 		Render::ModelId Corner = Render::LoadModel("assets/golf/corner.glb");
@@ -119,5 +123,28 @@ public:
 			return ' ';
 		result = tMap[Index];
 		return result;
+	}
+};
+
+class MapManager
+{
+public:
+	std::vector<TileManager> Maps;
+	int CurrentMap = 0;
+
+	void RegisterMap(TileManager Map)
+	{
+		Maps.push_back(Map);
+	}
+
+	void ChangeMap()
+	{
+		for (auto &tile : Maps[CurrentMap].PlatformTiles)
+			Physics::SetTransform(tile.Collider, glm::translate(glm::vec3(99, 99, 99)));
+
+		CurrentMap = ++CurrentMap % Maps.size();
+
+		for (auto &tile : Maps[CurrentMap].PlatformTiles)
+			Physics::SetTransform(tile.Collider, tile.Transform);
 	}
 };
