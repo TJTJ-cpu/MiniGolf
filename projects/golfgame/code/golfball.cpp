@@ -4,6 +4,7 @@
 #include "render/debugrender.h"
 #include "render/input/inputserver.h"
 #include "render/input/keyboard.h"
+
 GolfBall::GolfBall() 
 {
 	Position = glm::vec3(1, 1, 1);
@@ -39,11 +40,17 @@ void GolfBall::Update(float dt)
 		Velocity.z = 0;
 	}
 
-	if (glm::length(Velocity) > 0) 
-		AddForce(Friction);
+	/// ALWAYS APPLY GRAVITY
+	this->AddForce(glm::vec3(0, -CurrGravity, 0));
 
-	//IsWallHit();
-	IsGrounded();
+	/// IF THE BALL IS GROUNDED ADD THE NORMAL FORCE FROM THE GROUND
+	if (IsGrounded()) {
+		this->AddForce(glm::vec3(0, CurrGravity, 0));
+	}
+
+	/// ONLY ADD FRICTION IF THE BALL IS GROUNDED
+	if (bGrounded && glm::length(Velocity) > 0) 
+		AddForce(Friction);
 
 	Transform = glm::translate(Position);
 }
@@ -52,25 +59,10 @@ bool GolfBall::IsGrounded()
 {
 	Physics::RaycastPayload HitResult;
 
+	glm::vec3 GroundedDirection = glm::vec3(0,-1,0);
+	HitResult = Physics::Raycast(this->Position, GroundedDirection, BallRadius);
+	bGrounded = HitResult.hit;
 
-	std::vector<glm::vec3> GroundedDirections = { glm::vec3(0,-1,0) };// , glm::vec3(0.33, -1, 0), glm::vec3(-0.33, -1, 0), glm::vec3(0, -1, 0.33), glm::vec3(0, -1, -0.33) };
-	for (auto Direction : GroundedDirections)
-	{
-		HitResult = Physics::Raycast(this->Position, Direction, BallRadius + 0.02f);
-		if (HitResult.hit)
-			bGrounded = true;
-		else
-			bGrounded = false;
-	}
-	this->AddForce(glm::vec3(0, -CurrGravity, 0));
-	if (bGrounded) {
-		this->AddForce(glm::vec3(0, CurrGravity, 0));
-	}
-	else {
-		//this->Velocity.y = 0.0f;
-
-	}
-	//std::cout << std::boolalpha << bGrounded<< std::endl;
 	return bGrounded;
 }
 
@@ -118,7 +110,6 @@ bool GolfBall::IsWallHit()
 
 void GolfBall::HandlePhysics(float dt)
 {
-	//PrevPosition = Position;
 	Velocity += Acceleration * dt;
 
 	if (glm::length(Velocity) < 0.01f)
