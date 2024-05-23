@@ -31,6 +31,7 @@ namespace GolfInput
 		bool Pressed[Button::NUM_BUTTONS];
 		bool Released[Button::NUM_BUTTONS];
 		bool Held[Button::NUM_BUTTONS];
+		bool JustReleased[Button::NUM_BUTTONS];
 
 		glm::vec2 LeftStick;
 		glm::vec2 RightStick;
@@ -38,23 +39,29 @@ namespace GolfInput
 		float LeftTrigger;
 		float RightTrigger;
 
+		int CurrentJoystick = GLFW_JOYSTICK_1;
+		bool ANY_BUTTON = false;
+
 		void Update()
 		{
 
 			int count;
-			const unsigned char* Hit = glfwGetJoystickButtons(GLFW_JOYSTICK_1, &count);
+			const unsigned char* Hit = glfwGetJoystickButtons(CurrentJoystick, &count);
 
+			ANY_BUTTON = false;
 			for (int i = 0; i < Button::NUM_BUTTONS; i++)
 			{
 				PrevState[i] = CurrentState[i];
 				CurrentState[i] = Hit[i];
 
-				Pressed[i] = PrevState[i] == 0 && CurrentState[i] == 1;
-				Released[i] = CurrentState[i] == 0;
-				Held[i] = CurrentState[i] == 1;
+				Pressed[i] =		CurrentState[i] == GLFW_PRESS	&& PrevState[i] == GLFW_RELEASE;
+				Released[i] =		CurrentState[i] == GLFW_RELEASE;
+				Held[i] =			CurrentState[i] == GLFW_PRESS;
+				JustReleased[i] =	CurrentState[i] == GLFW_RELEASE && PrevState[i] == GLFW_PRESS;
+				ANY_BUTTON |= Pressed[i] == 1;
 			}
 
-			const float* axes = glfwGetJoystickAxes(GLFW_JOYSTICK_1, &count);
+			const float* axes = glfwGetJoystickAxes(CurrentJoystick, &count);
 
 #ifdef __linux__
 			LeftStick = glm::vec2(axes[0], -axes[1]);
