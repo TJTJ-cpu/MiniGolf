@@ -49,18 +49,22 @@ public:
 	std::vector<std::string> OldScores;
 	int currentNameIndex = 0;
 
+
 	void Update(float DeltaSeconds);
 	void Draw();
 	void CheckCollisions();
 	void UpdateCameraThirdPerson(float dt);
 	void UpdateCameraTopDown(float dt);
 
-	void EnterHighScoreName(std::string MapName);
-	void WriteScoreToFile(std::string MapName);
+	void ResetGame(glm::vec3 SpawnPosition);
 
-	void RenderHighScore(NVGcontext* vg);
-	void RenderScore(NVGcontext* vg);
-	void RenderOldScore(NVGcontext* vg);
+	//void EnterHighScoreName(std::string MapName);
+	//void WriteScoreToFile(std::string MapName);
 
-	std::vector<std::string> GetOldScore(std::string MapName);
+	//void RenderHighScore(NVGcontext* vg);
+	//void RenderHighScoreRanking(NVGcontext* vg);
+	//void RenderScore(NVGcontext* vg);
+	//void RenderOldScore(NVGcontext* vg);
+
+	//std::vector<std::string> GetOldScore(std::string MapName);
 };

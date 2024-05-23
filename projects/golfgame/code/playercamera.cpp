@@ -42,12 +42,6 @@ void PlayerCamera::Update(float DeltaSeconds)
 	BallPos.y = 0;
 	ClubPos.y = 0;
 
-	/// IF THE ACTION BUTTON IS PRESSED GO TOWARDS TO BALL
-	if (gamepad->Pressed[GolfInput::Gamepad::Button::A_BUTTON] && !Club.bIsMovingTowardBall && (glm::length(Ball.Velocity) < 0.1)) {
-		Club.bIsMovingTowardBall = true;
-		DistanceFromClubToTheGolfBall = glm::distance(this->Ball.Position, this->Club.Position);
-		BallHitDirection = glm::normalize(BallPos - ClubPos);
-	}
 
 	/// SWITCH CAMERA PERSPECTIVE
 	if (gamepad->Pressed[GolfInput::Gamepad::Button::RIGHT_SHOULDER_BUTTON]) {
@@ -57,6 +51,19 @@ void PlayerCamera::Update(float DeltaSeconds)
 			HandleClubAndCameraInput = &PlayerCamera::UpdateCameraThirdPerson;
 		OrbitPoint = 0;
 	}
+
+	if (!IsGameWon)
+	{
+		/// IF THE ACTION BUTTON IS PRESSED GO TOWARDS TO BALL
+		if (gamepad->Pressed[GolfInput::Gamepad::Button::A_BUTTON] && !Club.bIsMovingTowardBall && (glm::length(Ball.Velocity) < 0.1)) {
+			Club.bIsMovingTowardBall = true;
+			DistanceFromClubToTheGolfBall = glm::distance(this->Ball.Position, this->Club.Position);
+			BallHitDirection = glm::normalize(BallPos - ClubPos);
+		}
+	}
+
+	/// A COMMAND PATTERN STYLE; HOPEFULLY PREFERABLE TO AN IF-ELSE
+	(this->*HandleClubAndCameraInput)(DeltaSeconds);
 
 	if (Club.bIsMovingTowardBall) {
 		glm::vec3 norm = glm::normalize(BallPos - ClubPos);
@@ -71,9 +78,6 @@ void PlayerCamera::Update(float DeltaSeconds)
 			Score++;
 		}
 	}
-
-	/// A COMMAND PATTERN STYLE; HOPEFULLY PREFERABLE TO AN IF-ELSE
-	(this->*HandleClubAndCameraInput)(DeltaSeconds);
 
 	/// KEEP CLUB IN RANGE
 	if (!Club.bIsMovingTowardBall) {
@@ -95,7 +99,7 @@ void PlayerCamera::Update(float DeltaSeconds)
 	glm::vec3 BallVelNotY = Ball.Velocity;
 	BallVelNotY.y = 0;
 	if (glm::length(BallVelNotY) == 0 && Ball.bGrounded)
-		Debug::DrawLine(BallPos + glm::vec3(0,0.1f,0), glm::vec3(0,0.1f,0) + ClubPos + (BallPos - ClubPos) * 1.5f, 2.0f, {1,0,0,1}, {1,0,0,1});
+		Debug::DrawLine(BallPos + glm::vec3(0, 0.1f, 0), glm::vec3(0, 0.1f, 0) + ClubPos + (BallPos - ClubPos) * 1.5f, 2.0f, { 1,0,0,1 }, { 1,0,0,1 });
 
 	this->Ball.HandlePhysics(DeltaSeconds);
 	//std::cout << "Ball grounded: " << std::boolalpha << Ball.bGrounded << "\n";
@@ -105,9 +109,9 @@ void PlayerCamera::Update(float DeltaSeconds)
 
 void PlayerCamera::Draw()
 {
-	Debug::DrawLine(Ball.Position, Ball.Position + glm::vec3(0, 0.2, 0), 1.0f, glm::vec4(1,0,1,1),glm::vec4(1,1,1,1));
+	Debug::DrawLine(Ball.Position, Ball.Position + glm::vec3(0, 0.2, 0), 1.0f, glm::vec4(1, 0, 1, 1), glm::vec4(1, 1, 1, 1));
 
-	if (Ball.bGrounded && glm::length(this->Ball.Velocity) < 0.05) {
+	if (!IsGameWon && Ball.bGrounded && glm::length(this->Ball.Velocity) < 0.05) {
 		this->Club.Draw();
 	}
 	else {
@@ -131,7 +135,7 @@ void PlayerCamera::UpdateCameraThirdPerson(float dt)
 {
 	Render::Camera* cam = Render::CameraManager::GetCamera(CAMERA_MAIN);
 
-	glm::vec3 TargetPosition; 
+	glm::vec3 TargetPosition;
 
 	OrbitPoint += dt * gamepad->RightStick.x * OrbitSpeed;
 
@@ -148,7 +152,7 @@ void PlayerCamera::UpdateCameraThirdPerson(float dt)
 	//if (OrbitDistance > 1)
 		//OrbitDistance -= ZoomSpeed * ZoomInAmount;
 
-	OffSet = glm::vec3(0, OrbitDistance/2, 0);
+	OffSet = glm::vec3(0, OrbitDistance / 2, 0);
 
 	TargetPosition = Ball.Position + OffSet;
 	TargetPosition.x -= glm::cos(OrbitPoint) * OrbitDistance;
@@ -199,145 +203,12 @@ void PlayerCamera::UpdateCameraTopDown(float dt)
 	cam->view = glm::lookAt(Position, Position + glm::vec3(0, -1, 0), glm::vec3(1, 0, 0));
 }
 
-void PlayerCamera::EnterHighScoreName(std::string MapName) {
-	if (gamepad->Pressed[GolfInput::Gamepad::Button::DPAD_DOWN]) {
-		Name[currentNameIndex]++;
-		if (Name[currentNameIndex] > 'Z')
-			Name[currentNameIndex] = 'A';
-	}
-	else if (gamepad->Pressed[GolfInput::Gamepad::Button::DPAD_RIGHT]) {
-		currentNameIndex++;
-		if (currentNameIndex >= Name.length())
-			currentNameIndex = 0;
-	}
-	else if (gamepad->Pressed[GolfInput::Gamepad::Button::DPAD_UP]) {
-		Name[currentNameIndex]--;
-		if (Name[currentNameIndex] < 'A')
-			Name[currentNameIndex] = 'Z';
-	}
-	else if (gamepad->Pressed[GolfInput::Gamepad::Button::DPAD_LEFT]) {
-		currentNameIndex--;
-		if (currentNameIndex < 0)
-			currentNameIndex = Name.length() - 1;
-	}
-	else if (gamepad->Pressed[GolfInput::Gamepad::Button::A_BUTTON]) {
-		WriteScoreToFile(MapName);
-		IsGameWon = false;
-		Score = 0;
-		Name = "AAA";
-		Ball.Position = glm::vec3(2, 1, 0);
-	}
-}
-
-void PlayerCamera::WriteScoreToFile(std::string MapName) {
-	std::ofstream ScoreFile(MapName + "_highscores.txt", std::ios::app);
-	ScoreFile << Name << " " << Score << "\n";
-	ScoreFile.close();
-}
-
-void PlayerCamera::RenderHighScore(NVGcontext* vg) {
-	/// BOX BEHIND TEXT
-    nvgBeginPath(vg);
-	nvgRect(vg, 550, 300, 400, 200);
-    NVGpaint paint;
-    paint = nvgLinearGradient(vg, 600, 100, 650, 150, nvgRGBA(0, 0, 0, 200), nvgRGBA(0, 0, 0, 200));
-    nvgFillPaint(vg, paint);
-    nvgFill(vg);
-
-    nvgFontSize(vg, 56.0f);
-    nvgFontFace(vg, "sans");
-
-	nvgFillColor(vg, nvgRGBA(255, 255, 255, 128));
-    nvgText(vg, 600, 380, "Enter Name: ", NULL);
-
-	for (int i = 0; i < Name.length(); i++)
-	{
-		nvgFillColor(vg, nvgRGBA(255, 255, 255, 128));
-		if (currentNameIndex == i)
-			nvgFillColor(vg, nvgRGBA(255, 0, 0, 128));
-		nvgText(vg, 675 + 50 * i, 450, Name.substr(i,1).c_str(), NULL);
-	}
-}
-
-void PlayerCamera::RenderScore(NVGcontext* vg) {
-	/// BOX BEHIND TEXT
-    nvgBeginPath(vg);
-	nvgRect(vg, 40, 10, 300, 150);
-    NVGpaint paint;
-    paint = nvgLinearGradient(vg, 600, 100, 650, 150, nvgRGBA(0, 0, 0, 100), nvgRGBA(0, 0, 0, 100));
-    nvgFillPaint(vg, paint);
-    nvgFill(vg);
-
-    nvgFontSize(vg, 56.0f);
-    nvgFontFace(vg, "sans");
-    nvgFillColor(vg, nvgRGBA(255, 255, 255, 128));
-	std::string sScore = std::to_string(Score);
-	const char* cScore = sScore.c_str();
-    nvgText(vg, 60, 60, "Score: ", NULL);
-    nvgText(vg, 80, 120, cScore, NULL);
-}
-
-void PlayerCamera::RenderOldScore(NVGcontext* vg) {
-    nvgBeginPath(vg);
-	nvgRect(vg, 50, 250, 400, (OldScores.size() + 1) * 50 + 10);
-    NVGpaint paint;
-    paint = nvgLinearGradient(vg, 600, 100, 650, 150, nvgRGBA(0, 0, 0, 100), nvgRGBA(0, 0, 0, 100));
-    nvgFillPaint(vg, paint);
-    nvgFill(vg);
-
-    nvgFontSize(vg, 56.0f);
-    nvgFontFace(vg, "sans");
-    nvgFillColor(vg, nvgRGBA(255, 255, 255, 128));
-	std::string sScore = std::to_string(Score);
-	const char* cScore = sScore.c_str();
-
-    nvgText(vg, 60, 300, "HighScore: ", NULL);
-	int i = 350;
-	for (auto Score : OldScores) {
-		nvgText(vg, 60, i, Score.c_str(), NULL);
-		i += 50;
-	}
-
-}
-
-std::vector<std::string> PlayerCamera::GetOldScore(std::string MapName) {
-	std::vector<std::string> Scores;
-
-	std::string Line;
-	std::ifstream MyFile(MapName + "_highscores.txt");
-
-	if (!MyFile.is_open()) {
-		return Scores;
-	}
-
-	std::vector<std::string> HighscoreName;
-	std::vector<int> Highscore;
-
-	while (std::getline(MyFile, Line)) {
-		std::string ScoreName = Line.substr(0, Name.size());
-		int Score = std::stoi(Line.substr(Name.length() + 1, Line.length() - 1));
-
-		int insertPoint = 0;
-		while (insertPoint < Highscore.size() && Highscore[insertPoint] < Score)
-			insertPoint++;
-
-		/// INSERT THE SCORES AT THE PROPER POINT IN THE LISTS
-		Highscore.insert(Highscore.begin() + insertPoint, Score);
-		HighscoreName.insert(HighscoreName.begin() + insertPoint, ScoreName);
-	}
-
-	MyFile.close();
-
-	/// TAKES THOSE TWO LISTS WE HAD EARLIER AND MERGE THEM AND PUT THEM IN A NEW LIST AS C STYLE STRINGS
-	for (int i = 0; i < HighscoreName.size(); i++)
-	{
-		Scores.push_back(std::to_string(i + 1) + ". " + HighscoreName[i] + "......" + std::to_string(Highscore[i]));
-		if (Scores.size() == 7)
-			break;
-	}
-
-	for (auto score : Scores)
-		std::cout << score << "\n";
-
-	return Scores;
+void PlayerCamera::ResetGame(glm::vec3 SpawnPosition)
+{
+	Name = "AAA";
+	Score = 0;
+	Ball.Position = SpawnPosition;
+	Ball.Velocity = { 0,0,0 };
+	Ball.Acceleration = { 0,0,0 };
+	IsGameWon = false;
 }

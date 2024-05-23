@@ -5,7 +5,7 @@
 #include "config.h"
 #include <map>
 #include "golfball.h"
-#include "spacegameapp.h"
+#include "golfgameapp.h"
 #include <cstring>
 #include "imgui.h"
 #include "render/renderdevice.h"
@@ -21,12 +21,13 @@
 #include "core/cvar.h"
 #include "render/physics.h"
 #include <chrono>
-#include "spaceship.h"
 #include <iostream>
 #include "playercamera.h"
 #include "tilemanager.h"
 
 #include "gamepad.h"
+#include "UI.h"
+#include "Scoring.h"
 
 using namespace Display;
 using namespace Render;
@@ -37,7 +38,7 @@ namespace Game
 //------------------------------------------------------------------------------
 /**
 */
-SpaceGameApp::SpaceGameApp()
+GolfGameApp::GolfGameApp()
 {
     // empty
 }
@@ -45,7 +46,7 @@ SpaceGameApp::SpaceGameApp()
 //------------------------------------------------------------------------------
 /**
 */
-SpaceGameApp::~SpaceGameApp()
+GolfGameApp::~GolfGameApp()
 {
 	// empty
 }
@@ -54,7 +55,7 @@ SpaceGameApp::~SpaceGameApp()
 /**
 */
 bool
-SpaceGameApp::Open()
+GolfGameApp::Open()
 {
 	App::Open();
 	this->window = new Display::Window;
@@ -88,7 +89,7 @@ SpaceGameApp::Open()
 /**
 */
 void
-SpaceGameApp::Run()
+GolfGameApp::Run()
 {
     int w;
     int h;
@@ -248,8 +249,6 @@ SpaceGameApp::Run()
         lights[i] = Render::LightServer::CreatePointLight(translation, color, Core::RandomFloat() * 4.0f, 1.0f + (15 + Core::RandomFloat() * 10.0f));
     }
 
-    SpaceShip ship;
-    ship.model = LoadModel("assets/space/spaceship.glb");
     GolfInput::Gamepad gamepad;
     PlayerCamera GodEye(&gamepad, AllMaps[CurrentMap].BallSpawn, glm::vec3(0, 2, 0), glm::vec3(0, 0, 0));
 
@@ -259,14 +258,17 @@ SpaceGameApp::Run()
     bool DEBUGRealTimeUpdate = true;
 
     /// Collect the old scores from file
-	GodEye.OldScores = GodEye.GetOldScore(AllMaps[CurrentMap].Name);
+	GodEye.OldScores = Scoring::GetOldScore(AllMaps[CurrentMap].Name, GodEye.Name.size());
+
+    bool ShowRanking = false;
+    int PlayerRank = 0;
 
     /// game loop
     while (this->window->IsOpen())
 	{
         gamepad.Update();
 
-        /// THIS SHOULD PROBABLY BE MOVE TO THE PLAYER CAMERA; SOME SORT OF HANDLE INPUT METHOD MAYBE??
+        /// THIS SHOULD PROBABLY BE MOVED TO THE PLAYER CAMERA; SOME SORT OF HANDLE INPUT METHOD MAYBE??
         if (gamepad.Pressed[GolfInput::Gamepad::Button::SELECT]) {
             GodEye.CurrentTime = 0;
             for (auto &tile : AllMaps[CurrentMap].PlatformTiles) {
@@ -288,7 +290,7 @@ SpaceGameApp::Run()
             GodEye.Score = 0;
             GodEye.Club.bIsMovingTowardBall = false;
             GodEye.bStartGame = true;
-			GodEye.OldScores = GodEye.GetOldScore(AllMaps[CurrentMap].Name);
+			GodEye.OldScores = Scoring::GetOldScore(AllMaps[CurrentMap].Name, GodEye.Name.size());
         }
 
         auto timeStart = std::chrono::steady_clock::now();
@@ -304,7 +306,6 @@ SpaceGameApp::Run()
             ShaderResource::ReloadShaders();
         }
 
-        //ship.Update(dt);
         if (gamepad.Pressed[GolfInput::Gamepad::Button::X_BUTTON])
             DEBUGRealTimeUpdate = !DEBUGRealTimeUpdate;
 
@@ -323,8 +324,8 @@ SpaceGameApp::Run()
         }
 
 		//Debug::DrawBox(glm::translate(GodEye.Ball.Position + GodEye.Ball.Velocity * float(dt)) * glm::scale(glm::vec3(0.1f, 0.1f, 0.1f)), {1,1,1,1});
-        if (glm::length(GodEye.Ball.Velocity) > 0.1f)
-			Debug::DrawLine(GodEye.Ball.Position, GodEye.Ball.Position + glm::normalize(GodEye.Ball.Velocity) * (0.3f + glm::length(GodEye.Ball.Velocity * float(dt)) + GodEye.Ball.BallRadius), 2.0f, {0,1,0,1}, {0,1,0,1}, Debug::RenderMode::AlwaysOnTop);
+   //     if (glm::length(GodEye.Ball.Velocity) > 0.1f)
+			//Debug::DrawLine(GodEye.Ball.Position, GodEye.Ball.Position + glm::normalize(GodEye.Ball.Velocity) * (0.3f + glm::length(GodEye.Ball.Velocity * float(dt)) + GodEye.Ball.BallRadius), 2.0f, {0,1,0,1}, {0,1,0,1}, Debug::RenderMode::AlwaysOnTop);
 
 		/// LENGTH --> glm::length(Velocity * dt) + BallRadius
         GodEye.CheckCollisions();
@@ -341,7 +342,7 @@ SpaceGameApp::Run()
 
         if (GodEye.bStartGame) {
             std::cout << "Once " << std::endl;
-            GodEye.GetOldScore(AllMaps[CurrentMap].Name);
+            Scoring::GetOldScore(AllMaps[CurrentMap].Name, GodEye.Name.size());
             GodEye.bStartGame = false;
         }
         
@@ -349,7 +350,7 @@ SpaceGameApp::Run()
 
         char CurrentTile = AllMaps[CurrentMap].SearchWhereAmI(GodEye.Ball.Position.x, GodEye.Ball.Position.z);
         if (CurrentTile == 'h' || CurrentTile == 'H') {
-			GodEye.Ball.CurrGravity = GodEye.HighGravity;
+			GodEye.Ball.CurrGravity = GodEye.LowGravity;
 
             /// WIN CONDITION
             if (GodEye.Ball.HeightOfTheLastFrameOfTheBall > GodEye.Ball.Position.y && !GodEye.IsGameWon) {
@@ -362,16 +363,40 @@ SpaceGameApp::Run()
         GodEye.Ball.HeightOfTheLastFrameOfTheBall = GodEye.Ball.Position.y;
         std::vector<std::string> temp;
 
-        if (GodEye.IsGameWon) {
-			GodEye.EnterHighScoreName(AllMaps[CurrentMap].Name);
-			GodEye.RenderHighScore(window->vg);
+        if (ShowRanking)
+        {
+            UI::RenderHighScoreRanking(window->vg, GodEye, GodEye.OldScores, PlayerRank);
+
+            if (gamepad.ANY_BUTTON)
+            {
+                ShowRanking = false;
+                GodEye.ResetGame(AllMaps[CurrentMap].BallSpawn);
+            }
+        }
+        else if (GodEye.IsGameWon) {
+            if (Scoring::EnterHighScoreName(AllMaps[CurrentMap].Name, &gamepad, &GodEye))
+            {
+                ShowRanking = true;
+                int Rank = 0;
+                for (auto score : Scoring::GetScores(AllMaps[CurrentMap].Name, GodEye.Name.size()))
+                    if (GodEye.Score > score)
+                        Rank++;
+                //while (Rank < GodEye.OldScores.size() && GodEye.Score < std::stoi(GodEye.OldScores[Rank].substr(11, 100)))
+                PlayerRank = Rank;
+                GodEye.OldScores = Scoring::GetOldScore(AllMaps[CurrentMap].Name, GodEye.Name.size());
+            }
+			UI::RenderEnterName(window->vg, GodEye);
         }
         else {
-            GodEye.RenderScore(window->vg);
-            GodEye.RenderOldScore(window->vg);
+            UI::RenderCurrentScore(window->vg, GodEye);
+            UI::RenderOldScore(window->vg, GodEye);
         }
 
-        // Physics::DebugDrawColliders();
+        if (GodEye.Ball.ContinousRaycastPoints.size() != 0)
+			for (int i = 0; i < GodEye.Ball.ContinousRaycastPoints.size() - 1; i++)
+				Debug::DrawLine(GodEye.Ball.ContinousRaycastPoints[i], GodEye.Ball.ContinousRaycastPoints[i + 1], 2.0f, {0,1,1,1}, {0,1,1,1}, Debug::RenderMode::AlwaysOnTop);
+
+        Physics::DebugDrawColliders();
 	
         // Execute the entire rendering pipeline
         RenderDevice::Render(this->window, dt);
@@ -391,7 +416,7 @@ SpaceGameApp::Run()
 /**
 */
 void
-SpaceGameApp::Exit()
+GolfGameApp::Exit()
 {
     this->window->Close();
 }
@@ -400,7 +425,7 @@ SpaceGameApp::Exit()
 /**
 */
 void
-SpaceGameApp::RenderUI()
+GolfGameApp::RenderUI()
 {
 	if (this->window->IsOpen())
 	{
@@ -414,7 +439,7 @@ SpaceGameApp::RenderUI()
 /**
 */
 void
-SpaceGameApp::RenderNanoVG(NVGcontext* vg)
+GolfGameApp::RenderNanoVG(NVGcontext* vg)
 {
     nvgSave(vg);
 
@@ -423,8 +448,6 @@ SpaceGameApp::RenderNanoVG(NVGcontext* vg)
     paint = nvgLinearGradient(vg, 600, 100, 650, 150, nvgRGBA(255, 0, 0, 255), nvgRGBA(0, 255, 0, 255));
     nvgFillPaint(vg, paint);
     nvgFill(vg);
-
-
 
     // Header
     nvgBeginPath(vg);

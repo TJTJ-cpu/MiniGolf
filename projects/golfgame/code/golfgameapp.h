@@ -1,9 +1,9 @@
 #pragma once
 //------------------------------------------------------------------------------
 /**
-	Space game application
+	Golf game application
 
-	(C) 20222 Individual contributors, see AUTHORS file
+	(C) 2024 Individual contributors, see AUTHORS file
 */
 //------------------------------------------------------------------------------
 #include "core/app.h"
@@ -11,13 +11,13 @@
 
 namespace Game
 {
-class SpaceGameApp : public Core::App
+class GolfGameApp : public Core::App
 {
 public:
 	/// constructor
-	SpaceGameApp();
+	GolfGameApp();
 	/// destructor
-	~SpaceGameApp();
+	~GolfGameApp();
 
 	/// open app
 	bool Open();
