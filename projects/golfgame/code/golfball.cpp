@@ -63,6 +63,11 @@ bool GolfBall::IsGrounded()
 	HitResult = Physics::Raycast(this->Position, GroundedDirection, BallRadius);
 	bGrounded = HitResult.hit;
 
+	/// PUT THE BALL *ON* THE GROUND IF IT IS *IN* THE GROUND 
+	/// (PROBABLY A BIT BROKEN AND DUMB RIGHT NOW)
+	if (HitResult.hitDistance < BallRadius)
+		Position.y += BallRadius - HitResult.hitDistance - 0.01f;
+
 	return bGrounded;
 }
 
@@ -84,11 +89,11 @@ bool GolfBall::IsWallHit()
 	for (int i = 0; i < WallDirections.size(); i++) {
 		glm::vec3 &Direction = WallDirections[i];
 		HitResult = Physics::Raycast(rayOrigin, Direction, BallRadius);
-		//Physics::RaycastPayload TESTDELETETHIS = Physics::Raycast(rayOrigin, Direction, 5);
-		//if (TESTDELETETHIS.hit)
-		//	Debug::DrawLine(rayOrigin, TESTDELETETHIS.hitPoint, 2.0f, glm::vec4(0, 1, 0, 1), glm::vec4(0, 1, 0, 1), Debug::RenderMode::Normal);
-		//else
-		//	Debug::DrawLine(rayOrigin, rayOrigin + Direction * 5.0f, 2.0f, glm::vec4(1, 0, 0, 1), glm::vec4(1, 0, 0, 1), Debug::RenderMode::Normal);
+		Physics::RaycastPayload TESTDELETETHIS = Physics::Raycast(rayOrigin, Direction, 5);
+		if (TESTDELETETHIS.hit)
+			Debug::DrawLine(rayOrigin, TESTDELETETHIS.hitPoint, 2.0f, glm::vec4(0, 1, 0, 1), glm::vec4(0, 1, 0, 1), Debug::RenderMode::Normal);
+		else
+			Debug::DrawLine(rayOrigin, rayOrigin + Direction * 5.0f, 2.0f, glm::vec4(1, 0, 0, 1), glm::vec4(1, 0, 0, 1), Debug::RenderMode::Normal);
 		if (HitResult.hit) {
 			glm::vec3 Dir = Direction + glm::vec3(0.001, 0, 0.001);
 			HitResultExtendedCheck = Physics::Raycast(rayOrigin, Dir, 1);
@@ -112,6 +117,8 @@ void GolfBall::HandlePhysics(float dt)
 {
 	Velocity += Acceleration * dt;
 
+	std::vector<glm::vec3> RaycastPoints;
+
 	if (glm::length(Velocity) < 0.01f)
 		Velocity = { 0,0,0 };
 	//Position += Velocity * dt;
@@ -120,24 +127,34 @@ void GolfBall::HandlePhysics(float dt)
 	glm::vec3 CurrentPosition = Position;
 	glm::vec3 TargetPosition = Position + Velocity * dt;
 
+
 	/// REFLECT VELOCITY IF WE ARE MOVING INTO OR THROUGH A WALL
 	Physics::RaycastPayload NextHit;
 	NextHit = Physics::Raycast(Position, glm::normalize(Velocity), glm::length(Velocity * dt) + BallRadius);
 	if (NextHit.hit) {
 		do
 		{
+			RaycastPoints.push_back(CurrentPosition);
+
 			glm::vec3 Normal = glm::normalize(NextHit.hitNormal);
 			float RemainingDistance = glm::length(Velocity * dt) - NextHit.hitDistance;
 			Velocity = glm::reflect(Velocity, Normal) * 0.85f;
+			///
+			Velocity.y *= 0.1f;
+			///
 			TargetPosition = NextHit.hitPoint + glm::normalize(Velocity) * BallRadius + glm::normalize(Velocity) * RemainingDistance;
 			NextHit = Physics::Raycast(CurrentPosition + Normal * BallRadius, glm::normalize(Velocity), glm::length(Velocity * dt) + BallRadius);
 			CurrentPosition = TargetPosition;
 		} while (NextHit.hit);
+		RaycastPoints.push_back(CurrentPosition);
 
 		Position = TargetPosition;
+		RaycastPoints.push_back(TargetPosition);
 	}
 	else 
 		Position += Velocity * dt;
+
+	ContinousRaycastPoints = RaycastPoints;
 
 	Transform = glm::translate(Position);
 

@@ -19,7 +19,7 @@ public:
 	float HeightOfTheLastFrameOfTheBall;
 	float CurrGravity = 5.5f;
 	float FrictionForce = 0.9;
-	float BallRadius = 0.05;
+	float BallRadius = 0.03;
 	bool bGrounded = false;
 
 	void Draw();
@@ -28,4 +28,7 @@ public:
 	bool IsWallHit();
 	void HandlePhysics(float dt);
 	void AddForce(glm::vec3 force);
+
+	/// DEBUG
+	std::vector<glm::vec3> ContinousRaycastPoints;
 };
