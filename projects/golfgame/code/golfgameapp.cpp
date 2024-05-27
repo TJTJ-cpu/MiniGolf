@@ -102,7 +102,7 @@ GolfGameApp::Run()
 
 	int Three = 3;
 	//std::string Map = "cScSoSSoSSoSSoSSHScSc";
-	std::string Map = "eoooooooSSoSSoSSHScSc";
+	std::string Map = "xxxxxxxxx";
     int Four = 4;
     std::string Map1 = "ctc t ccC  tt ccSSS SCc cS   h  ";
 
@@ -124,18 +124,14 @@ GolfGameApp::Run()
 	//								2,0,0,
 	//								2,0,0,
 	//								3,3,0 };
-    std::vector<int> Rotations = { 0,0,0,
-								0,0,0,
-	0,0,0,
-	0,0,0,
-	0,0,0,
-	0,0,0,
+    std::vector<int> Rotations = { 0,1,2,
+								3,0,0,
 	0,0,0 };
 
 	TileManager Tile;
 	TileManager Tile2;
 	TileManager Tile3;
-	std::pair<std::string, std::vector<int>> MapInfo = Tile3.GenerateTileMap("oooo ooooooo", 3);
+	std::pair<std::string, std::vector<int>> MapInfo = Tile3.GenerateTileMap("ooo o ooo", 3);
 
 	Tile.SpawnMap("TJ's Map", Four, Map1, Map1Rotations, glm::vec3(2, 1, 0));
 	Tile2.SpawnMap("Square", Three, Map, Rotations, glm::vec3(1, 1, 1));
@@ -366,7 +362,7 @@ GolfGameApp::Run()
 		if (GodEye.Ball.Position.y < 0.04) { GodEye.Ball.Position.y = 0.04f; }
 
 		char CurrentTile = AllMaps[CurrentMap].SearchWhereAmI(GodEye.Ball.Position.x, GodEye.Ball.Position.z);
-		std::cout << GodEye.Ball.Position.y << std::endl;
+		//std::cout << GodEye.Ball.Position.y << std::endl;
 		if (CurrentTile == 'h' || CurrentTile == 'H') {
 			GodEye.Ball.CurrGravity = GodEye.LowGravity;
 
