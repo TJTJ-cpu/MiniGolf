@@ -104,6 +104,7 @@ GolfGameApp::Run()
 	std::string Map = "cScSoSSoSSoSSoSSHScSc";
     int Four = 4;
     std::string Map1 = "ctc t ccC  tt ccSSS SCc cS   h  ";
+
     // THIS SHIT IS BOTTOM UP
 	// FROM THE SPACESHIP'S SPAWN PERSPECTIVE X INCREASES LEFT AND Y UP
     std::vector<int> Map1Rotations = { 2,1,1,0,
@@ -124,19 +125,26 @@ GolfGameApp::Run()
 									3,3,0 };
     TileManager Tile;
     TileManager Tile2;
+    TileManager Tile3;
+    std::pair<std::string, std::vector<int>> MapInfo = Tile3.GenerateTileMap("oooooooooooo", 3);
 
     Tile.SpawnMap("TJ's Map", Four, Map1, Map1Rotations, glm::vec3(2, 1, 0));
     Tile2.SpawnMap("Square", Three, Map, Rotations, glm::vec3(1, 1, 1));
+    Tile3.SpawnMap("Square2", 3, MapInfo.first, MapInfo.second, glm::vec3(1, 1, 1));
 
     MapManager mapManager;
     mapManager.RegisterMap(Tile);
     mapManager.RegisterMap(Tile2);
+    mapManager.RegisterMap(Tile3);
     
     /// MOVES THE UNRELATED SHIT OUTTA THE WAY
     for (auto& tile : Tile2.PlatformTiles)
         Physics::SetTransform(tile.Collider, glm::translate(glm::vec3(99, 99, 99)));
 
-    std::vector<TileManager> AllMaps = { Tile, Tile2 };
+    for (auto& tile : Tile3.PlatformTiles)
+        Physics::SetTransform(tile.Collider, glm::translate(glm::vec3(99, 99, 99)));
+
+    std::vector<TileManager> AllMaps = { Tile, Tile2, Tile3 };
     int CurrentMap = 0;
 
 	struct ColliderId {
@@ -196,8 +204,7 @@ GolfGameApp::Run()
 
 
     // Setup asteroids far
-    for (int i = 0; i < 20; i++)
-    {
+    for (int i = 0; i < 20; i++) {
         std::tuple<ModelId, Physics::ColliderId, glm::mat4> asteroid;
         size_t resourceIndex = (size_t)(Core::FastRandom() % 6);
         std::get<0>(asteroid) = models[resourceIndex];
