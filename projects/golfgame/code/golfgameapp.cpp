@@ -347,13 +347,15 @@ GolfGameApp::Run()
         }
         
         GodEye.Draw();
+		if (GodEye.Ball.Position.y < 0.04) { GodEye.Ball.Position.y = 0.04f; }
 
         char CurrentTile = AllMaps[CurrentMap].SearchWhereAmI(GodEye.Ball.Position.x, GodEye.Ball.Position.z);
+        std::cout << GodEye.Ball.Position.y << std::endl;
         if (CurrentTile == 'h' || CurrentTile == 'H') {
 			GodEye.Ball.CurrGravity = GodEye.LowGravity;
 
             /// WIN CONDITION
-            if (GodEye.Ball.HeightOfTheLastFrameOfTheBall > GodEye.Ball.Position.y && !GodEye.IsGameWon) {
+            if (GodEye.Ball.Position.y < 0.06) {
                 GodEye.IsGameWon = true;
             }
         }
