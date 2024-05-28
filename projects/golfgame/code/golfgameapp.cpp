@@ -279,6 +279,7 @@ GolfGameApp::Run()
 	while (this->window->IsOpen())
 	{
 		gamepad.Update();
+		UI::DrawFPS(window->vg, dt);
 
 		/// THIS SHOULD PROBABLY BE MOVED TO THE PLAYER CAMERA; SOME SORT OF HANDLE INPUT METHOD MAYBE??
 		if (gamepad.Pressed[GolfInput::Gamepad::Button::SELECT]) {

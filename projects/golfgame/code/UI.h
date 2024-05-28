@@ -9,4 +9,5 @@ namespace UI
 	void RenderHighScoreRanking(NVGcontext* vg, PlayerCamera pl, std::vector<std::string> Scores, int PlayerScoreIndex);
 	void RenderCurrentScore(NVGcontext* vg, PlayerCamera pl);
 	void RenderOldScore(NVGcontext* vg, PlayerCamera pl);
+	void DrawFPS(NVGcontext* vg, float DeltaSeconds);
 }

@@ -98,3 +98,15 @@ void UI::RenderOldScore(NVGcontext* vg, PlayerCamera pl)
 	}
 }
 
+void UI::DrawFPS(NVGcontext* vg, float DeltaSeconds)
+{
+	/// BOX BEHIND TEXT
+    DrawBackgroundBox(vg, 900, 10, 600, 150, 200);
+
+    nvgFontSize(vg, 56.0f);
+    nvgFontFace(vg, "sans");
+    nvgFillColor(vg, nvgRGBA(255, 255, 255, 128));
+	std::string Framerate = "FPS: " + std::to_string(1 / DeltaSeconds);
+    nvgText(vg, 980, 120, Framerate.c_str(), NULL);
+}
+
