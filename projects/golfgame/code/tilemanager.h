@@ -131,7 +131,10 @@ public:
 					continue;
 				}
 				else
+				{
 					std::cout << "ERROR::TileManager::VoidSpawnMap" << std::endl;
+					continue;
+				}
 				temp.Transform = Transform;
 				PlatformTiles.push_back(temp);
 				//if (Map[y * width + x] == 'H') {
@@ -255,96 +258,92 @@ public:
 			else if (Rotations[i] != ' ')
 				Rotations[i] = '_';
 
-		CharGetNeighbors(Map, Width, 2, 2);
-		CharGetNeighbors(Map, Width, 0, 0);
+		CharGetNeighbors(Map, Width, 0, 2);
 
 		std::map<char, char> Shapes = {
+			/// 0b01234567
 			/// OPEN
 			{ 0b11111111, 'o' },
+			{ 0b11101110, 'o' },
+			{ 0b11101011, 'o' },
 
 			/// INNER CORNER
 			{ 0b10111111, 'i' },
 
 			/// SIDE
-			{ 0b11011111, 'S' },
+			{ 0b10001111, 'S' },
 			{ 0b10011111, 'S' },
 			{ 0b11001111, 'S' },
-			{ 0b10001111, 'S' },
+			{ 0b11011111, 'S' },
+			{ 0b10001110, 'S' },
+			{ 0b10011110, 'S' },
+			{ 0b11001110, 'S' },
+			{ 0b11011110, 'S' },
+			{ 0b10001011, 'S' },
+			{ 0b10011011, 'S' },
+			{ 0b11001011, 'S' },
+			{ 0b11011011, 'S' },
+			{ 0b10001010, 'S' },
+			{ 0b10011010, 'S' },
+			{ 0b11001010, 'S' },
+			{ 0b11011010, 'S' },
 
 			/// CORNER
-			// { 0b10000011, 'c' },
-			// { 0b11000011, 'c' },
-			// { 0b10010011, 'c' },
-			// { 0b11010011, 'c' },
-			// { 0b10000111, 'c' },
-			// { 0b11000111, 'c' },
-			// { 0b10010111, 'c' },
-			// { 0b11010111, 'c' },
-			{ 0b00001110, 'c' },
-			{ 0b00001111, 'c' },
-			{ 0b01001110, 'c' },
-			{ 0b01001111, 'c' },
-			{ 0b00011110, 'c' },
-			{ 0b00011111, 'c' },
-			{ 0b01011110, 'c' },
-			{ 0b01011111, 'c' },
+			{ 0b10000011, 'c' },
+			{ 0b10000111, 'c' },
+			{ 0b11000011, 'c' },
+			{ 0b11000111, 'c' },
+			{ 0b10010011, 'c' },
+			{ 0b10010111, 'c' },
+			{ 0b11010011, 'c' },
+			{ 0b11010111, 'c' },
 
 			/// STRAIGHT
-			{ 0b00100010, 't' },
-			{ 0b00100011, 't' },
-			{ 0b01100010, 't' },
-			{ 0b01100011, 't' },
-			{ 0b00110010, 't' },
-			{ 0b00110011, 't' },
-			{ 0b01110010, 't' },
-			{ 0b01110011, 't' },
-			{ 0b00100110, 't' },
-			{ 0b00100111, 't' },
-			{ 0b01100110, 't' },
-			{ 0b01100111, 't' },
-			{ 0b00110110, 't' },
-			{ 0b00110111, 't' },
-			{ 0b01110110, 't' },
-			{ 0b01110111, 't' },
+			{ 0b10001000, 't' },
+			{ 0b10001001, 't' },
+			{ 0b10001100, 't' },
+			{ 0b10001101, 't' },
+			{ 0b10011000, 't' },
+			{ 0b10011001, 't' },
+			{ 0b10011100, 't' },
+			{ 0b10011101, 't' },
+			{ 0b11001000, 't' },
+			{ 0b11001001, 't' },
+			{ 0b11001100, 't' },
+			{ 0b11001101, 't' },
+			{ 0b11011000, 't' },
+			{ 0b11011001, 't' },
+			{ 0b11011100, 't' },
+			{ 0b11011101, 't' },
 
 			/// END
-			{ 0b00100000, 'e' },
-			{ 0b00110000, 'e' },
-			{ 0b00100100, 'e' },
-			{ 0b00110100, 'e' },
-			{ 0b00100001, 'e' },
-			{ 0b00110001, 'e' },
-			{ 0b00100101, 'e' },
-			{ 0b00110101, 'e' },
-			{ 0b00000110, 'e' },
-			{ 0b00000111, 'e' },
-			{ 0b01000110, 'e' },
-			{ 0b01000111, 'e' },
-			{ 0b00010110, 'e' },
-			{ 0b00010111, 'e' },
-			{ 0b01010110, 'e' },
-			{ 0b01010111, 'e' },
+			{ 0b10000000, 'e' },
+			{ 0b10000001, 'e' },
+			{ 0b10000100, 'e' },
+			{ 0b10000101, 'e' },
+			{ 0b10010000, 'e' },
+			{ 0b10010001, 'e' },
+			{ 0b10010100, 'e' },
+			{ 0b10010101, 'e' },
+			{ 0b11000000, 'e' },
+			{ 0b11000001, 'e' },
+			{ 0b11000100, 'e' },
+			{ 0b11000101, 'e' },
+			{ 0b11010000, 'e' },
+			{ 0b11010001, 'e' },
+			{ 0b11010100, 'e' },
+			{ 0b11010101, 'e' },
 
 			/// SQUARE A
 			{ 0b10000010, 'a' },
-			{ 0b11000010, 'a' },
-			{ 0b10010010, 'a' },
-			{ 0b11010010, 'a' },
-			{ 0b10000110, 'a' },
-			{ 0b11000110, 'a' },
-			{ 0b10010110, 'a' },
-			{ 0b11010110, 'a' },
 
 			/// SPLIT T
 			{ 0b10100010, 'x' },
-			{ 0b10110010, 'x' },
-			{ 0b10100110, 'x' },
-			{ 0b10110110, 'x' },
 		};
 
-		for (int x = 0; x < Width; x++)
+		for (int y = 0; y < Map.length() / Width; y++)
 		{
-			for (int y = 0; y < Map.length() / Width; y++)
+			for (int x = 0; x < Width; x++)
 			{
 				if (GetChar(Map, Width, x, y) == 'o')
 				{
@@ -356,7 +355,7 @@ public:
 						{
 							FoundSomething = true;
 							Result[y * Width + x] = Shapes.at(Neighbors);
-							IntRotations.push_back(3 - i);
+							IntRotations.push_back(i);
 
 							break;
 						}
@@ -365,6 +364,7 @@ public:
 
 					if (!FoundSomething)
 					{
+						Result[y * Width + x] = 'C';
 						IntRotations.push_back(0);
 					}
 				}
@@ -406,19 +406,13 @@ public:
 	std::vector<TileManager> Maps;
 	int CurrentMap = 0;
 
-	void RegisterMap(TileManager Map)
-	{
+	void RegisterMap(TileManager Map) {
 		Maps.push_back(Map);
 	}
 
-	void ChangeMap()
-	{
-		for (auto& tile : Maps[CurrentMap].PlatformTiles)
-			Physics::SetTransform(tile.Collider, glm::translate(glm::vec3(99, 99, 99)));
-
+	void ChangeMap() {
+		for (auto& tile : Maps[CurrentMap].PlatformTiles) Physics::SetTransform(tile.Collider, glm::translate(glm::vec3(99, 99, 99)));
 		CurrentMap = ++CurrentMap % Maps.size();
-
-		for (auto& tile : Maps[CurrentMap].PlatformTiles)
-			Physics::SetTransform(tile.Collider, tile.Transform);
+		for (auto& tile : Maps[CurrentMap].PlatformTiles) Physics::SetTransform(tile.Collider, tile.Transform);
 	}
 };
