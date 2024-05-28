@@ -131,11 +131,20 @@ GolfGameApp::Run()
 	TileManager Tile;
 	TileManager Tile2;
 	TileManager Tile3;
-	std::pair<std::string, std::vector<int>> MapInfo = Tile3.GenerateTileMap("ooo o ooo", 3);
+	std::pair<std::string, std::vector<int>> MapInfo = Tile3.GenerateTileMap(	std::string("ooooo") +  
+																							"o   o" + 
+																							"o   o"
+																							"o ooo"
+																							"o o  "
+																							"o o o"
+																							"ooooo"
+																							"o   o"
+																							"o   o"
+																							"ooooo", 5);
 
 	Tile.SpawnMap("TJ's Map", Four, Map1, Map1Rotations, glm::vec3(2, 1, 0));
 	Tile2.SpawnMap("Square", Three, Map, Rotations, glm::vec3(1, 1, 1));
-	Tile3.SpawnMap("Square2", 3, MapInfo.first, MapInfo.second, glm::vec3(1, 1, 1));
+	Tile3.SpawnMap("Square2", 5, MapInfo.first, MapInfo.second, glm::vec3(1, 1, 0));
 
 	MapManager mapManager;
 	mapManager.RegisterMap(Tile);
@@ -411,7 +420,7 @@ GolfGameApp::Run()
 			for (int i = 0; i < GodEye.Ball.ContinousRaycastPoints.size() - 1; i++)
 				Debug::DrawLine(GodEye.Ball.ContinousRaycastPoints[i], GodEye.Ball.ContinousRaycastPoints[i + 1], 2.0f, { 0,1,1,1 }, { 0,1,1,1 }, Debug::RenderMode::AlwaysOnTop);
 
-		Physics::DebugDrawColliders();
+		//Physics::DebugDrawColliders();
 
 		// Execute the entire rendering pipeline
 		RenderDevice::Render(this->window, dt);
