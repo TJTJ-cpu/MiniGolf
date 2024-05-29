@@ -46,12 +46,12 @@ public:
 		Render::ModelId Windmill = Render::LoadModel("assets/golf/windmill.glb");
 		Render::ModelId BlueGolfBall = Render::LoadModel("assets/golf/ball-blue.glb");
 		Render::ModelId Tunnel = Render::LoadModel("assets/golf/straight.glb");
-		Render::ModelId HoleRound = Render::LoadModel("assets/golf/hole-round.glb");
+		Render::ModelId HoleSquare = Render::LoadModel("assets/golf/hole-square.glb");
 		Render::ModelId SplitT = Render::LoadModel("assets/golf/split-t.glb");
 		Render::ModelId End = Render::LoadModel("assets/golf/end.glb");
 
 		Physics::ColliderMeshId mHoleOpen = Physics::LoadColliderMesh("assets/golf/hole-open.glb");
-		Physics::ColliderMeshId mHoleRound = Physics::LoadColliderMesh("assets/golf/hole-round.glb");
+		Physics::ColliderMeshId mHoleSquare = Physics::LoadColliderMesh("assets/golf/hole-square.glb");
 		Physics::ColliderMeshId mCastle = Physics::LoadColliderMesh("assets/golf/castle.glb");
 		Physics::ColliderMeshId mStart = Physics::LoadColliderMesh("assets/golf/start.glb");
 		Physics::ColliderMeshId mOpen = Physics::LoadColliderMesh("assets/golf/open.glb");
@@ -87,8 +87,8 @@ public:
 					temp.Model = Castle;
 				}
 				else if (Map[y * width + x] == 'h') {
-					temp.Collider = Physics::CreateCollider(mHoleRound, Transform);
-					temp.Model = HoleRound;
+					temp.Collider = Physics::CreateCollider(mHoleSquare, Transform);
+					temp.Model = HoleSquare;
 				}
 				else if (Map[y * width + x] == 't') {
 					temp.Collider = Physics::CreateCollider(mTunnel, Transform);
@@ -215,7 +215,7 @@ public:
 		int i = 7;
 		for (auto Point : Spiral)
 		{
-			c |= (GetChar(Map, Width, Point.first, Point.second) == 'o') << i;
+			c |= (GetChar(Map, Width, Point.first, Point.second) != ' ') << i;
 			i--;
 		}
 
@@ -297,6 +297,8 @@ public:
 			{ 0b10010111, 'c' },
 			{ 0b11010011, 'c' },
 			{ 0b11010111, 'c' },
+			{ 0b10000110, 'c' },
+			{ 0b11000110, 'c' },
 
 			/// STRAIGHT
 			{ 0b10001000, 't' },
@@ -368,7 +370,24 @@ public:
 						IntRotations.push_back(0);
 					}
 				}
-				else
+				else if (GetChar(Map, Width, x, y) == 'h')
+				{
+					Result[y * Width + x] = 'h';
+					if ((CharGetNeighbors(Map, Width, x, y) & 0b10000000) == 0b10000000)
+						IntRotations.push_back(0);
+					else if ((CharGetNeighbors(Map, Width, x, y) & 0b00100000) == 0b00100000)
+						IntRotations.push_back(3);
+					else if ((CharGetNeighbors(Map, Width, x, y) & 0b00001000) == 0b00001000)
+						IntRotations.push_back(2);
+					else if ((CharGetNeighbors(Map, Width, x, y) & 0b00000010) == 0b00000010)
+						IntRotations.push_back(1);
+				}
+				else if (GetChar(Map, Width, x, y) == 'H')
+				{
+					Result[y * Width + x] = 'H';
+					IntRotations.push_back(0);
+				}
+				else if (GetChar(Map, Width, x, y) == ' ')
 				{
 					Result[y * Width + x] = ' ';
 					IntRotations.push_back(0);
@@ -376,7 +395,7 @@ public:
 			}
 		}
 
-		for (int y = 0; y < Map.size()/Width; y++)
+		for (int y = 0; y < Map.size() / Width; y++)
 		{
 			for (int x = 0; x < Width; x++)
 			{

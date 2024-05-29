@@ -136,15 +136,26 @@ GolfGameApp::Run()
 																							"o   o"
 																							"o ooo"
 																							"o o  "
-																							"o o o"
+																							"o o h"
 																							"ooooo"
-																							"o   o"
+																							"o  oo"
 																							"o   o"
 																							"ooooo", 5);
 
-	Tile.SpawnMap("TJ's Map", Four, Map1, Map1Rotations, glm::vec3(2, 1, 0));
-	Tile2.SpawnMap("Square", Three, Map, Rotations, glm::vec3(1, 1, 1));
-	Tile3.SpawnMap("Square2", 5, MapInfo.first, MapInfo.second, glm::vec3(1, 1, 0));
+	std::pair<std::string, std::vector<int>> MapInfo2 = Tile2.GenerateTileMap(	std::string("ooooo") +  
+																							"o  oo" + 
+																							"o ooo"
+																							"o o o"
+																							"ooo o"
+																							"o ooo"
+																							"o  oo"
+																							"oh  o"
+																							"o   o"
+																							"ooooo", 5);
+
+	Tile.SpawnMap("MAP1", Four, Map1, Map1Rotations, glm::vec3(2, 1, 0));
+	Tile2.SpawnMap("MAP2", 5, MapInfo.first, MapInfo.second , glm::vec3(1, 1, 0));
+	Tile3.SpawnMap("MAP3", 5, MapInfo2.first, MapInfo2.second, glm::vec3(1, 1, 0));
 
 	MapManager mapManager;
 	mapManager.RegisterMap(Tile);
