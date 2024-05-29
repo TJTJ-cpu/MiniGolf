@@ -7,6 +7,26 @@ namespace GolfInput
 {
 	struct Gamepad
 	{
+#ifdef __linux__
+		enum Button {
+			A_BUTTON,
+			B_BUTTON,
+			X_BUTTON,
+			Y_BUTTON,
+			LEFT_SHOULDER_BUTTON,
+			RIGHT_SHOULDER_BUTTON,
+			SELECT,
+			START,
+			HOME_BUTTON,
+			LEFT_STICK_CLICK,
+			RIGHT_STICK_CLICK,
+			DPAD_UP,
+			DPAD_RIGHT,
+			DPAD_DOWN,
+			DPAD_LEFT,
+			NUM_BUTTONS
+		};
+#elif _WIN32
 		enum Button {
 			A_BUTTON,
 			B_BUTTON,
@@ -24,6 +44,7 @@ namespace GolfInput
 			DPAD_LEFT,
 			NUM_BUTTONS
 		};
+#endif
 
 		int PrevState[Button::NUM_BUTTONS];
 		int CurrentState[Button::NUM_BUTTONS];
@@ -75,11 +96,11 @@ namespace GolfInput
 			LeftTrigger = axes[2];
 			RightTrigger = axes[5];
 #elif _WIN32
-			LeftStick = glm::vec2(axes[0], axes[1]);
+			LeftStick = glm::vec2(axes[0], -axes[1]);
 			if (glm::length(LeftStick) < 0.1f)
 				LeftStick = {0,0};
 
-			RightStick = glm::vec2(axes[2], axes[3]);
+			RightStick = glm::vec2(axes[2], -axes[3]);
 			if (glm::length(RightStick) < 0.1f)
 				RightStick = {0,0};
 
