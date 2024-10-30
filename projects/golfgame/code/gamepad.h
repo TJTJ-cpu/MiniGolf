@@ -49,16 +49,16 @@ namespace GolfInput
 		int PrevState[Button::NUM_BUTTONS];
 		int CurrentState[Button::NUM_BUTTONS];
 
-		bool Pressed[Button::NUM_BUTTONS];
-		bool Released[Button::NUM_BUTTONS];
-		bool Held[Button::NUM_BUTTONS];
-		bool JustReleased[Button::NUM_BUTTONS];
+		bool Pressed[Button::NUM_BUTTONS]{ false };
+		bool Released[Button::NUM_BUTTONS]{ false };
+		bool Held[Button::NUM_BUTTONS]{ false };
+		bool JustReleased[Button::NUM_BUTTONS]{ false };
 
-		glm::vec2 LeftStick;
-		glm::vec2 RightStick;
+		glm::vec2 LeftStick{ 0, 0 };
+		glm::vec2 RightStick{ 0, 0 };
 
-		float LeftTrigger;
-		float RightTrigger;
+		float LeftTrigger{ 0 };
+		float RightTrigger{ 0 };
 
 		int CurrentJoystick = GLFW_JOYSTICK_1;
 		bool ANY_BUTTON = false;
@@ -68,6 +68,9 @@ namespace GolfInput
 
 			int count;
 			const unsigned char* Hit = glfwGetJoystickButtons(CurrentJoystick, &count);
+
+			if (Hit == nullptr)
+				return;
 
 			ANY_BUTTON = false;
 			for (int i = 0; i < Button::NUM_BUTTONS; i++)
