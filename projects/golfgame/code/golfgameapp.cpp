@@ -286,6 +286,7 @@ GolfGameApp::Run()
 
 	std::clock_t c_start = std::clock();
 	double dt = 0.01667f;
+	double dtReal = dt;
 
 	bool DEBUGRealTimeUpdate = true;
 
@@ -299,7 +300,7 @@ GolfGameApp::Run()
 	while (this->window->IsOpen())
 	{
 		gamepad.Update();
-		UI::DrawFPS(window->vg, dt);
+		UI::DrawFPS(window->vg, dtReal);
 
 		/// THIS SHOULD PROBABLY BE MOVED TO THE PLAYER CAMERA; SOME SORT OF HANDLE INPUT METHOD MAYBE??
 		if (gamepad.Pressed[GolfInput::Gamepad::Button::SELECT]) {
@@ -441,6 +442,7 @@ GolfGameApp::Run()
 
 		auto timeEnd = std::chrono::steady_clock::now();
 		dt = std::min(0.04, std::chrono::duration<double>(timeEnd - timeStart).count());
+		dtReal = std::chrono::duration<double>(timeEnd - timeStart).count();
 
 		if (kbd->pressed[Input::Key::Code::Escape] || gamepad.Pressed[GolfInput::Gamepad::Button::START])
 			this->Exit();
